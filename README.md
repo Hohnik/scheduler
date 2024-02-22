@@ -6,6 +6,8 @@ We need a fully automated scheduler for semester-long lecture plans and also for
 
 We first make it work, then make it work better and then make it pretty.
 
+Tasks can be picket from the (Miro Board)[https://miro.com/app/board/uXjVNp4_eUU=/].
+
 ### v0
 
 * Information needs to be stored in tables. We use Excel (!!) to simulate tables, because it's easy and enough for our prototype.
