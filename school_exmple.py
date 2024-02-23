@@ -1,12 +1,46 @@
 from ortools.sat.python import cp_model
 
+def main():
+  # DATA
+  lectures = ['English', 'Math', 'History']
+  levels = ['1-', '2-', '3-']
+  sections = ['A']
+  lecturers = ['Mario', 'Elvis', 'Donald', 'Ian']
+  teachers_work_hours = [18, 12, 12, 18]
+  working_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+  periods = ['08:00-09:30', '09:45-11:15', '11:30-13:00']
+  curriculum = {
+      ('1-', 'English'): 3,
+      ('1-', 'Math'): 3,
+      ('1-', 'History'): 2,
+      ('2-', 'English'): 4,
+      ('2-', 'Math'): 2,
+      ('2-', 'History'): 2,
+      ('3-', 'English'): 2,
+      ('3-', 'Math'): 4,
+      ('3-', 'History'): 2
+  }
+
+  # Subject -> List of lecturers who can teach it
+  specialties_idx_inverse = [
+      [1, 3],  # English   -> Elvis & Ian
+      [0, 3],  # Math      -> Mario & Ian
+      [2, 3]  # History   -> Donald & Ian
+  ]
+
+  problem = SchoolSchedulingProblem(
+      lectures, lecturers, curriculum, specialties_idx_inverse, working_days,
+      periods, levels, sections, teachers_work_hours)
+  solver = SchoolSchedulingSatSolver(problem)
+  solver.solve()
+  solver.print_status()
 
 class SchoolSchedulingProblem(object):
 
-  def __init__(self, subjects, teachers, curriculum, specialties, working_days,
+  def __init__(self, lectures, lecturers, curriculum, specialties, working_days,
                periods, levels, sections, teacher_work_hours):
-    self.subjects = subjects
-    self.teachers = teachers
+    self.lectures = lectures
+    self.lecturers = lecturers
     self.curriculum = curriculum
     self.specialties = specialties
     self.working_days = working_days
@@ -31,8 +65,8 @@ class SchoolSchedulingSatSolver(object):
     self.num_days = len(problem.working_days)
     self.num_periods = len(problem.periods)
     self.num_slots = len(self.timeslots)
-    self.num_teachers = len(problem.teachers)
-    self.num_subjects = len(problem.subjects)
+    self.num_teachers = len(problem.lecturers)
+    self.num_subjects = len(problem.lectures)
     self.num_levels = len(problem.levels)
     self.num_sections = len(problem.sections)
     self.courses = [
@@ -71,7 +105,7 @@ class SchoolSchedulingSatSolver(object):
         course = level * self.num_sections + section
         for subject in all_subjects:
           required_slots = self.problem.curriculum[self.problem.levels[
-              level], self.problem.subjects[subject]]
+              level], self.problem.lectures[subject]]
           self.model.Add(
               sum(self.assignment[course, subject, teacher, slot]
                   for slot in all_slots
@@ -135,41 +169,6 @@ class SchoolSchedulingSatSolutionPrinter(cp_model.CpSolverSolutionCallback):
   def NewSolution(self):
     print('Found Solution!')
 
-
-def main():
-  # DATA
-  subjects = ['English', 'Math', 'History']
-  levels = ['1-', '2-', '3-']
-  sections = ['A']
-  teachers = ['Mario', 'Elvis', 'Donald', 'Ian']
-  teachers_work_hours = [18, 12, 12, 18]
-  working_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-  periods = ['08:00-09:30', '09:45-11:15', '11:30-13:00']
-  curriculum = {
-      ('1-', 'English'): 3,
-      ('1-', 'Math'): 3,
-      ('1-', 'History'): 2,
-      ('2-', 'English'): 4,
-      ('2-', 'Math'): 2,
-      ('2-', 'History'): 2,
-      ('3-', 'English'): 2,
-      ('3-', 'Math'): 4,
-      ('3-', 'History'): 2
-  }
-
-  # Subject -> List of teachers who can teach it
-  specialties_idx_inverse = [
-      [1, 3],  # English   -> Elvis & Ian
-      [0, 3],  # Math      -> Mario & Ian
-      [2, 3]  # History   -> Donald & Ian
-  ]
-
-  problem = SchoolSchedulingProblem(
-      subjects, teachers, curriculum, specialties_idx_inverse, working_days,
-      periods, levels, sections, teachers_work_hours)
-  solver = SchoolSchedulingSatSolver(problem)
-  solver.solve()
-  solver.print_status()
 
 
 if __name__ == '__main__':
