@@ -6,7 +6,8 @@ We need a fully automated scheduler for semester-long lecture plans and also for
 
 We first make it work, then make it work better and then make it pretty.
 
-Tasks can be picket from the [MiroBoard](https://miro.com/app/board/uXjVNp4_eUU=/).
+[MiroBoard](https://miro.com/app/board/uXjVNp4_eUU=/) to pick Tickets.
+[Discord](https://discord.gg/D8DZDcXT) invite link.
 
 ### v0
 
