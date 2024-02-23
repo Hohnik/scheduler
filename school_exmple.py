@@ -6,7 +6,7 @@ def main():
   levels = ['1-', '2-', '3-']
   sections = ['A']
   lecturers = ['Mario', 'Elvis', 'Donald', 'Ian']
-  teachers_work_hours = [18, 12, 12, 18]
+  lecturers_work_hours = [18, 12, 12, 18]
   working_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
   periods = ['08:00-09:30', '09:45-11:15', '11:30-13:00']
   curriculum = {
@@ -30,7 +30,7 @@ def main():
 
   problem = SchoolSchedulingProblem(
       lectures, lecturers, curriculum, specialties_idx_inverse, working_days,
-      periods, levels, sections, teachers_work_hours)
+      periods, levels, sections, lecturers_work_hours)
   solver = SchoolSchedulingSatSolver(problem)
   solver.solve()
   solver.print_status()
@@ -38,7 +38,7 @@ def main():
 class SchoolSchedulingProblem(object):
 
   def __init__(self, lectures, lecturers, curriculum, specialties, working_days,
-               periods, levels, sections, teacher_work_hours):
+               periods, levels, sections, lecturer_work_hours):
     self.lectures = lectures
     self.lecturers = lecturers
     self.curriculum = curriculum
@@ -47,7 +47,7 @@ class SchoolSchedulingProblem(object):
     self.periods = periods
     self.levels = levels
     self.sections = sections
-    self.teacher_work_hours = teacher_work_hours
+    self.lecturer_work_hours = lecturer_work_hours
 
 
 class SchoolSchedulingSatSolver(object):
@@ -65,8 +65,8 @@ class SchoolSchedulingSatSolver(object):
     self.num_days = len(problem.working_days)
     self.num_periods = len(problem.periods)
     self.num_slots = len(self.timeslots)
-    self.num_teachers = len(problem.lecturers)
-    self.num_subjects = len(problem.lectures)
+    self.num_lecturers = len(problem.lecturers)
+    self.num_lectures = len(problem.lectures)
     self.num_levels = len(problem.levels)
     self.num_sections = len(problem.sections)
     self.courses = [
@@ -77,18 +77,18 @@ class SchoolSchedulingSatSolver(object):
     self.num_courses = self.num_levels * self.num_sections
 
     all_courses = range(self.num_courses)
-    all_teachers = range(self.num_teachers)
+    all_lecturers = range(self.num_lecturers)
     all_slots = range(self.num_slots)
     all_sections = range(self.num_sections)
-    all_subjects = range(self.num_subjects)
+    all_lectures = range(self.num_lectures)
     all_levels = range(self.num_levels)
 
     self.model = cp_model.CpModel()
 
     self.assignment = {}
     for c in all_courses:
-      for s in all_subjects:
-        for t in all_teachers:
+      for s in all_lectures:
+        for t in all_lecturers:
           for slot in all_slots:
             if t in self.problem.specialties[s]:
               name = 'C:{%i} S:{%i} T:{%i} Slot:{%i}' % (c, s, t, slot)
@@ -103,49 +103,49 @@ class SchoolSchedulingSatSolver(object):
     for level in all_levels:
       for section in all_sections:
         course = level * self.num_sections + section
-        for subject in all_subjects:
+        for lecture in all_lectures:
           required_slots = self.problem.curriculum[self.problem.levels[
-              level], self.problem.lectures[subject]]
+              level], self.problem.lectures[lecture]]
           self.model.Add(
-              sum(self.assignment[course, subject, teacher, slot]
+              sum(self.assignment[course, lecture, lecturer, slot]
                   for slot in all_slots
-                  for teacher in all_teachers) == required_slots)
+                  for lecturer in all_lecturers) == required_slots)
 
     # Teacher can do at most one class at a time
-    for teacher in all_teachers:
+    for lecturer in all_lecturers:
       for slot in all_slots:
         self.model.Add(
             sum([
-                self.assignment[c, s, teacher, slot]
+                self.assignment[c, s, lecturer, slot]
                 for c in all_courses
-                for s in all_subjects
+                for s in all_lectures
             ]) <= 1)
 
-    # Maximum work hours for each teacher
-    for teacher in all_teachers:
+    # Maximum work hours for each lecturer
+    for lecturer in all_lecturers:
       self.model.Add(
           sum([
-              self.assignment[c, s, teacher, slot]
-              for c in all_courses for s in all_subjects for slot in all_slots
-          ]) <= self.problem.teacher_work_hours[teacher])
+              self.assignment[c, s, lecturer, slot]
+              for c in all_courses for s in all_lectures for slot in all_slots
+          ]) <= self.problem.lecturer_work_hours[lecturer])
 
-    # Teacher makes all the classes of a subject's course
-    teacher_courses = {}
+    # Teacher makes all the classes of a lecture's course
+    lecturer_courses = {}
     for level in all_levels:
       for section in all_sections:
         course = level * self.num_sections + section
-        for subject in all_subjects:
-          for t in all_teachers:
-            name = 'C:{%i} S:{%i} T:{%i}' % (course, subject, teacher)
-            teacher_courses[course, subject, t] = self.model.NewBoolVar(name)
+        for lecture in all_lectures:
+          for t in all_lecturers:
+            name = 'C:{%i} S:{%i} T:{%i}' % (course, lecture, lecturer)
+            lecturer_courses[course, lecture, t] = self.model.NewBoolVar(name)
             temp_array = [
-                self.assignment[course, subject, t, slot] for slot in all_slots
+                self.assignment[course, lecture, t, slot] for slot in all_slots
             ]
-            self.model.AddMaxEquality(teacher_courses[course, subject, t],
+            self.model.AddMaxEquality(lecturer_courses[course, lecture, t],
                                       temp_array)
           self.model.Add(
-              sum(teacher_courses[course, subject, t]
-                  for t in all_teachers) == 1)
+              sum(lecturer_courses[course, lecture, t]
+                  for t in all_lecturers) == 1)
 
     # Solution collector
     self.collector = None
