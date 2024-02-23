@@ -1,13 +1,13 @@
 lecture_id, 2sws_lu, 2sws_pu, participants, participants_P, lecturer, module_name
-KI210, 2, 2, 50, 20, lecturer_id, Data Science II
-KI220, 4, 2, 50, 20, lecturer_id, Mathematik II
-KI230, 4, 2, 50, 20, lecturer_id, Programmieren II
-KI240, 2, 2, 50, 20, lecturer_id, Praxisgrundlagen der Informatik
-KI250, 3, 1, 50, 20, lecturer_id, Statistik
-KI410, 2, 2, 50, 20, lecturer_id, Algorithmen und Datenstrukturen
-KI420, 2, 2, 50, 20, lecturer_id, Software Engineering I
-KI430, 4, 2, 50, 20, lecturer_id, Natural Language Processing
-KI440, 4, 2, 50, 20, lecturer_id, Machine Learning II
-KI450, 2, 2, 50, 20, lecturer_id, Künstliche Intelligenz II
-KI610, 2, 2, 50, 20, lecturer_id, Big Data Algorithms
-KI620, 2, 2, 50, 20, lecturer_id, Machine Learning III
+KI210, 2, 2, 50, 20, L01, Data Science II
+KI220, 4, 2, 50, 20, L05, Mathematik II
+KI230, 4, 2, 50, 20, L04, Programmieren II
+KI240, 2, 2, 50, 20, L04, Praxisgrundlagen der Informatik
+KI250, 3, 1, 50, 20, L03, Statistik
+KI410, 2, 2, 50, 20, L07, Algorithmen und Datenstrukturen
+KI420, 2, 2, 50, 20, L08, Software Engineering I
+KI430, 4, 2, 50, 20, L02, Natural Language Processing
+KI440, 4, 2, 50, 20, L03, Machine Learning II
+KI450, 2, 2, 50, 20, L01, Künstliche Intelligenz II
+KI610, 2, 2, 50, 20, L07, Big Data Algorithms
+KI620, 2, 2, 50, 20, L02, Machine Learning III
