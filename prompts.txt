@@ -1,0 +1,55 @@
+In the first csv file under "db/lecturers.csv" you can find these keys
+
+lecturer_id: which is the unique id of every possible lecturer for example "L01" or "L02"
+monday: all available timeslots of the weekday in this format -> 0011111110 that meas the lecturer can't hold a lecture in the first two timeslots and in the last of the day.
+tuesday: same as monday
+wednesday: same as monday
+thursday: same as monday
+friday: same as monday
+lecturer_name: the name of the lecturer holding that module (string)
+
+lecturer_id, monday, tuesday, wednesday, thursday, friday, lecturer_name
+L01, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Kromer
+L02, 1111111100, 0111111100, 0011111110, 0000000000, 0011110111, Osendorfer
+L03, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Eisenreich
+L04, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Auer
+L05, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Ziegler
+L06, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Uhrmann
+L07, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Siebert
+L08, 0000000000, 1111101110, 1111111000, 0011111011, 1111111100, Schröter
+
+in the second csv under "db/modules.csv" you can find these keys
+
+module_id: is the unique id of the lecture/module for example "KI210" or "KI220"
+semester: the semester the module is available (integer)
+sws_lu: lecturetime per week (integer)
+sws_pu: practice lecturetime per week (integer)
+participants_lu: how many students can participate in this lecture (integer)
+participants_pu: how many students can participate in the practice lecture (integer)
+lecturer_id: which is the foreign key to the lecturer_id in the "lecturers.csv" file
+module_name: is the name of the module (string)
+
+module_id, semester, sws_lu, sws_pu, participants_lu, participants_pu, lecturer_id, module_name
+KI210, 2, 2, 2, 50, 20, L01, Data Science II
+KI220, 2, 4, 2, 50, 20, L05, Mathematik II
+KI230, 2, 4, 2, 50, 20, L04, Programmieren II
+KI240, 2, 2, 2, 50, 20, L04, Praxisgrundlagen der Informatik
+KI250, 2, 3, 1, 50, 20, L03, Statistik
+KI410, 4, 2, 2, 50, 20, L07, Algorithmen und Datenstrukturen
+KI420, 4, 2, 2, 50, 20, L08, Software Engineering I
+KI430, 4, 4, 2, 50, 20, L02, Natural Language Processing
+KI440, 4, 4, 2, 50, 20, L03, Machine Learning II
+KI450, 4, 2, 2, 50, 20, L01, Künstliche Intelligenz II
+KI610, 6, 2, 2, 50, 20, L07, Big Data Algorithms
+KI620, 6, 2, 2, 50, 20, L02, Machine Learning III
+
+the conditions are as follows:
+
+Every lecturer can only hold one module at a time.
+Module times dont need to be all after another, they can be spaced out over the week.
+Modules that are in the same semester can not be at the same time
+Lecturers can only do modules iff they have a 1 in the specific timeslot of the weekday
+
+
+if you have questions just ask me.
+Think about your awnser before you output it.
