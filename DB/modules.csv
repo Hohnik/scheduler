@@ -1,4 +1,4 @@
-lecture_id, 2sws_lu, 2sws_pu, participants, participants_P, lecturer, module_name
+module_id, 2sws_lu, 2sws_pu, participants, participants_P, lecturer_id, module_name
 KI210, 2, 2, 50, 20, L01, Data Science II
 KI220, 4, 2, 50, 20, L05, Mathematik II
 KI230, 4, 2, 50, 20, L04, Programmieren II

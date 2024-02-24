@@ -1,4 +1,4 @@
-lecturer_id, monday, tuesday, wednesday, thursday, friday, lename
+lecturer_id, monday, tuesday, wednesday, thursday, friday, lecturer_name
 L01, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Kromer
 L02, 1111111100, 0111111100, 0011111110, 0000000000, 0011110111, Osendorfer
 L03, 0011111110, 0000000000, 1111101110, 1111111000, 0011111011, Eisenreich
