@@ -3,117 +3,81 @@ from ortools.sat.python import cp_model
 
 from generate_lecturer_data import create_data
 
+#INFO: Remove sws_pu and participants_lu from modules.csv file and create new modules instead
 
 def run_model():
-    # Read the lecturer data from the CSV file using Pandas
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
-
-    # Read the module data from the CSV file using Pandas
     modules_df = pd.read_csv("db/modules.csv", dtype=str)
 
-    # Convert the Pandas DataFrames to Python data structures
     lecturers_data = lecturers_df.to_dict(orient="records")
     modules_data = modules_df.to_dict(orient="records")
+
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
     module_ids = [dct["module_id"] for dct in modules_data]
     lecturer_ids = [dct["lecturer_id"] for dct in lecturers_data]
     semesters = list(set([dct["semester"] for dct in modules_data]))
+    lecturers = lecturers_data
+    modules = modules_data
 
-    # Create the model
+    days_num = range(len(days))
+    module_ids_num = range(len(module_ids))
+    lecturer_ids_num = range(len(lecturer_ids))
+    semesters_num = range(len(semesters))
+    lecturers_num = range(len(lecturers_data))
+    modules_num = range(len(modules_data))
+
+    # Create model
     model = cp_model.CpModel()
-
-    # Create the timetable variables
     timetable = {}
-    for lecturer_id in lecturer_ids:
-        for module_id in module_ids:
-            for semester in semesters:
-                for day in days:
-                    for time_slot, bit in enumerate(lecturer_id[day]):
-                        if bit == "1":
-                            timetable[
-                                (
-                                    lecturer_id,
-                                    module_id,
-                                    semester,
-                                    day,
-                                    time_slot,
+    for lecturer in lecturers:
+        for lecturer_id in lecturer_ids_num:
+            for module_id in module_ids_num:
+                for semester in semesters_num:
+                    for day in days_num:
+                        for time_slot, bit in enumerate(lecturer[days[day]]):
+                            if bit == "1":
+                                timetable[(lecturer_id, module_id, semester, day, time_slot)] = model.NewBoolVar(
+                                    f"{lecturer_id}_{module_id}_{semester}_{day}_{time_slot}"
                                 )
-                            ] = model.NewBoolVar(
-                                f"{lecturer_id}_{module_id}_{semester}_{day}_{time_slot}"
-                            )
 
     # Define the constraints
     # Lecturers cannot be scheduled for two modules at the same time
-    # for lecturer in lecturers_data:
-    #     for day in days:
-    #         for time_slot, bit in enumerate(lecturer[day]):
-    #             if bit == "1":
-    #                 overlapping_modules = [
-    #                     timetable[(module["lecturer_id"], day, time_slot)]
-    #                     for module in modules_data
-    #                     if module["lecturer_id"] == lecturer["lecturer_id"]
-    #                 ]
-    #                 model.Add(len(overlapping_modules) <= 1)
-
-    # Lecturers cannot be scheduled for two modules at the same timefor module_id in module_ids:
-    for lecturer_id in lecturer_ids:
-        for module_id in module_ids:
-            for semester in semesters:
-                for day in days:
-                    for time_slot, bit in enumerate(lecturer_id[day]):
+    for lecturer in lecturers:
+        for lecturer_id in lecturer_ids_num:
+            for semester in semesters_num:
+                for day in days_num:
+                    for time_slot, bit in enumerate(lecturer[days[day]]):
                         if bit == "1":
-                            model.AddAtMostOne(
-                                timetable[
-                                    (
-                                        lecturer_id,
-                                        module_id,
-                                        semester,
-                                        day,
-                                        time_slot,
-                                    )
-                                ]
-                                for lecturer in lecturers_data
-                                for time_slot in lecturer[day]
+                            model.AddAtMostOne(timetable[(lecturer_id, module_id, semester, day, time_slot)]
+                                for module_id in module_ids_num
                             )
 
-    # Modules that are in the same semester cannot be at the same time
-    for day in days:
-        for module1 in modules_data:
-            for module2 in modules_data:
-                if (
-                    module1["semester"] == module2["semester"]
-                    and module1["module_id"] != module2["module_id"]
-                ):
-                    for lecturer1 in lecturers_data:
-                        for lecturer2 in lecturers_data:
-                            if (
-                                lecturer1["lecturer_id"] == module1["lecturer_id"]
-                                and lecturer2["lecturer_id"] == module2["lecturer_id"]
-                                and lecturer1["lecturer_id"] != lecturer2["lecturer_id"]
-                            ):
-                                for time_slot1, bit1 in enumerate(lecturer1[day]):
-                                    for time_slot2, bit2 in enumerate(lecturer2[day]):
-                                        # print(f"{lecturer1['lecturer_id']}:{bit1}:{time_slot1} , {lecturer2['lecturer_id']}:{bit2}:{time_slot2}")
-                                        if bit1 == "1" and bit2 == "1":
-                                            model.Add(
-                                                timetable[
-                                                    (
-                                                        module1["lecturer_id"],
-                                                        day,
-                                                        time_slot1,
-                                                    )
-                                                ]
-                                                + timetable[
-                                                    (
-                                                        module2["lecturer_id"],
-                                                        day,
-                                                        time_slot2,
-                                                    )
-                                                ]
-                                                <= 1,
-                                            )
+    # Only one module per semester per time_slot
+    for lecturer in lecturers:
+        for lecturer_id in lecturer_ids_num:
+            for module_id in module_ids_num:
+                for _, bit in enumerate(lecturer[days[day]]):
+                    if bit == "1":
+                        model.AddAtMostOne(timetable[(lecturer_id, module_id, semester, day, time_slot)]
+                            for semester in semesters_num
+                            for day in days_num
+                            for time_slot in range(10)
+                        )
+    
+    # All sws have to be taken
+    for module in modules:
+        for lecturer in lecturers:
+            for lecturer_id in lecturer_ids_num:
+                for module_id in module_ids_num:
+                    for semester in semesters_num:
+                        for _, bit in enumerate(lecturer[days[day]]):
+                            if bit == "1":
+                                model.Add(cp_model.LinearExpr.Sum([timetable[(lecturer_id, module_id, semester, day, time_slot)]
+                                    for day in days_num
+                                    for time_slot in range(10)
+                                ]) == int(module["sws_lu"]) * 2 )
 
-    # Modules that are in the same semester cannot be at the same time
+
 
     # Solve the model
     solver = cp_model.CpSolver()
@@ -123,31 +87,33 @@ def run_model():
     print(solver.NumBooleans(), solver.NumBranches(), solver.NumConflicts())
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        for module in modules_data:
-            lecturer_id = next(
-                (
-                    lecturer
-                    for lecturer in lecturers_data
-                    if lecturer["lecturer_id"] == module["lecturer_id"]
-                ),
-                None,
-            )
-            if lecturer_id:
-                for day in days:
-                    for time_slot, bit in enumerate(lecturer_id[day]):
-                        if bit == "1":
-                            if solver.Value(
-                                timetable[(module["lecturer_id"], day, time_slot)]
-                            ):
-                                print(
-                                    f"Lecturer {lecturer_id['lecturer_name']} is teaching {module['module_name']} on {day} at time slot {time_slot}"
-                                )
+        for lecturer in lecturers:
+            for lecturer_id in lecturer_ids_num:
+                for module_id in module_ids_num:
+                    for semester in semesters_num:
+                        for day in days_num:
+                            for time_slot, bit in enumerate(lecturer[days[day]]):
+                                if solver.Value(timetable[(lecturer_id, module_id, semester, day, time_slot)]):
+                                    print("Solved correctly with some value??!?!?")
+        # for module in modules_data:
+        #     lecturer_id = next((lecturer
+        #             for lecturer in lecturers_data
+        #             if lecturer["lecturer_id"] == module["lecturer_id"]
+        #         ),
+        #         None,
+        #     )
+        #                     if solver.Value(
+        #                         timetable[(module["lecturer_id"], day, time_slot)]
+        #                     ):
+        #                         print(
+        #                             f"Lecturer {lecturer_id['lecturer_name']} is teaching {module['module_name']} on {day} at time slot {time_slot}"
+        #                         )
         print("ran")
         return
     else:
         print("No feasible solution found.")
-        create_data()
-        run_model()
+        # create_data()
+        # run_model()
 
 
 run_model()
