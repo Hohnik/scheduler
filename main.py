@@ -52,17 +52,17 @@ def run_model():
                                 for module_id in module_ids_num
                             )
 
-    # # Only one module per semester per time_slot
-    # for lecturer in lecturers:
-    #     for lecturer_id in lecturer_ids_num:
-    #         for module_id in module_ids_num:
-    #             for _, bit in enumerate(lecturer[days[day]]):
-    #                 if bit == "1":
-    #                     model.AddAtMostOne(timetable[(lecturer_id, module_id, semester, day, time_slot)]
-    #                         for semester in semesters_num
-    #                         for day in days_num
-    #                         for time_slot in range(10)
-    #                     )
+    # Only one module per semester per time_slot
+    for lecturer in lecturers:
+        for lecturer_id in lecturer_ids_num:
+            for module_id in module_ids_num:
+                for _, bit in enumerate(lecturer[days[day]]):
+                    if bit == "1":
+                        model.AddAtMostOne(timetable[(lecturer_id, module_id, semester, day, time_slot)]
+                            for semester in semesters_num
+                            for day in days_num
+                            for time_slot in range(10)
+                        )
     
     # All sws have to be taken
     for module in modules:
