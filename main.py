@@ -15,32 +15,66 @@ def run_model():
     lecturers_data = lecturers_df.to_dict(orient="records")
     modules_data = modules_df.to_dict(orient="records")
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    module_ids = [dct["module_id"] for dct in modules_data]
+    lecturer_ids = [dct["lecturer_id"] for dct in lecturers_data]
+    semesters = list(set([dct["semester"] for dct in modules_data]))
 
     # Create the model
     model = cp_model.CpModel()
 
     # Create the timetable variables
     timetable = {}
-    for lecturer in lecturers_data:
-        for day in days:
-            for time_slot, bit in enumerate(lecturer[day]):
-                if bit == "1":
-                    timetable[(lecturer["lecturer_id"], day, time_slot)] = (
-                        model.NewBoolVar(f"{lecturer['lecturer_id']}_{day}_{time_slot}")
-                    )
+    for lecturer_id in lecturer_ids:
+        for module_id in module_ids:
+            for semester in semesters:
+                for day in days:
+                    for time_slot, bit in enumerate(lecturer_id[day]):
+                        if bit == "1":
+                            timetable[
+                                (
+                                    lecturer_id,
+                                    module_id,
+                                    semester,
+                                    day,
+                                    time_slot,
+                                )
+                            ] = model.NewBoolVar(
+                                f"{lecturer_id}_{module_id}_{semester}_{day}_{time_slot}"
+                            )
 
     # Define the constraints
     # Lecturers cannot be scheduled for two modules at the same time
-    for lecturer in lecturers_data:
-        for day in days:
-            for time_slot, bit in enumerate(lecturer[day]):
-                if bit == "1":
-                    overlapping_modules = [
-                        timetable[(module["lecturer_id"], day, time_slot)]
-                        for module in modules_data
-                        if module["lecturer_id"] == lecturer["lecturer_id"]
-                    ]
-                    model.Add(len(overlapping_modules) <= 1)
+    # for lecturer in lecturers_data:
+    #     for day in days:
+    #         for time_slot, bit in enumerate(lecturer[day]):
+    #             if bit == "1":
+    #                 overlapping_modules = [
+    #                     timetable[(module["lecturer_id"], day, time_slot)]
+    #                     for module in modules_data
+    #                     if module["lecturer_id"] == lecturer["lecturer_id"]
+    #                 ]
+    #                 model.Add(len(overlapping_modules) <= 1)
+
+    # Lecturers cannot be scheduled for two modules at the same timefor module_id in module_ids:
+    for lecturer_id in lecturer_ids:
+        for module_id in module_ids:
+            for semester in semesters:
+                for day in days:
+                    for time_slot, bit in enumerate(lecturer_id[day]):
+                        if bit == "1":
+                            model.AddAtMostOne(
+                                timetable[
+                                    (
+                                        lecturer_id,
+                                        module_id,
+                                        semester,
+                                        day,
+                                        time_slot,
+                                    )
+                                ]
+                                for lecturer in lecturers_data
+                                for time_slot in lecturer[day]
+                            )
 
     # Modules that are in the same semester cannot be at the same time
     for day in days:
@@ -79,15 +113,18 @@ def run_model():
                                                 <= 1,
                                             )
 
+    # Modules that are in the same semester cannot be at the same time
+
     # Solve the model
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
+    print(status)
     print(solver.StatusName())
     print(solver.NumBooleans(), solver.NumBranches(), solver.NumConflicts())
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         for module in modules_data:
-            lecturer = next(
+            lecturer_id = next(
                 (
                     lecturer
                     for lecturer in lecturers_data
@@ -95,15 +132,15 @@ def run_model():
                 ),
                 None,
             )
-            if lecturer:
+            if lecturer_id:
                 for day in days:
-                    for time_slot, bit in enumerate(lecturer[day]):
+                    for time_slot, bit in enumerate(lecturer_id[day]):
                         if bit == "1":
                             if solver.Value(
                                 timetable[(module["lecturer_id"], day, time_slot)]
                             ):
                                 print(
-                                    f"Lecturer {lecturer['lecturer_name']} is teaching {module['module_name']} on {day} at time slot {time_slot}"
+                                    f"Lecturer {lecturer_id['lecturer_name']} is teaching {module['module_name']} on {day} at time slot {time_slot}"
                                 )
         print("ran")
         return
