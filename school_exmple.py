@@ -95,7 +95,7 @@ class SchoolSchedulingProblem(object):
 
 class SchoolSchedulingSatSolver(object):
 
-    def __init__(self, problem):
+    def __init__(self, problem:SchoolSchedulingProblem):
         # Problem
         self.problem = problem
 
