@@ -105,8 +105,12 @@ def run_model():
                                 print(
                                     f"Lecturer {lecturer['lecturer_name']} is teaching {module['module_name']} on {day} at time slot {time_slot}"
                                 )
+        print("ran")
         return
     else:
         print("No feasible solution found.")
         create_data()
         run_model()
+
+
+run_model()
