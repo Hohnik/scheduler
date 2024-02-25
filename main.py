@@ -25,42 +25,20 @@ for lecturer in lecturers_data:
                     f"{lecturer['lecturer_id']}_{day}_{time_slot}"
                 )
 
-
-## Define the constraints
-## Each lecturer can only hold one module at a time
-#for time_slot in range(10):
-#    for day in days:
-#        model.Add(
-#            sum(
-#                timetable[(lecturer["lecturer_id"], day, time_slot)]
-#                for lecturer in lecturers_data
-#            )
-#            <= 1
-#        )
-#
-#
-#
-## Define the constraints
-## Lecturers cannot be scheduled for two modules at the same time
-#for day in days:
-#    for time_slot in range(10):
-#        for lecturer in lecturers_data:
-#            model.Add(timetable[(lecturer['lecturer_id'], day, time_slot)] <= 1)
-
 # Define the constraints
-# Lecturers cannot be scheduled for overlapping modules
+# Lecturers cannot be scheduled for two modules at the same time
 for lecturer in lecturers_data:
     for day in days:
         for time_slot, bitmask in enumerate(lecturer[day]):
             if bitmask == '1':
                 overlapping_modules = [
-                    timetable[(other_lecturer['lecturer_id'], day, time_slot)]
-                    for other_lecturer in lecturers_data
-                    if other_lecturer['lecturer_id'] != lecturer['lecturer_id']
+                    timetable[(module['lecturer_id'], day, time_slot)]
+                    for module in modules_data
+                    if module['lecturer_id'] == lecturer['lecturer_id']
                 ]
                 model.AddImplication(
                     timetable[(lecturer['lecturer_id'], day, time_slot)],
-                    sum(overlapping_modules) == 0
+                    sum(overlapping_modules) <= 1
                 )
 
 # Modules that are in the same semester cannot be at the same time
@@ -74,28 +52,9 @@ for module1 in modules_data:
                 for time_slot in range(10):
                     model.AddImplication(
                         timetable[(module1["lecturer_id"], day, time_slot)],
-                        sum(
-                            timetable[(module2["lecturer_id"], day, time_slot)]
-                            for day in days
-                        )
+                        timetable[(module2["lecturer_id"], day, time_slot)]
                         == 0,
                     )
-
-# Lecturers can only do modules if they have a 1 in the specific timeslot of the weekday
-for module in modules_data:
-    lecturer = next(
-        (
-            lecturer
-            for lecturer in lecturers_data
-            if lecturer["lecturer_id"] == module["lecturer_id"]
-        ),
-        None,
-    )
-    if lecturer:
-        for day in days:
-            for time_slot, bitmask in enumerate(lecturer[day]):
-                if bitmask == "0":
-                    model.Add(timetable[(module["lecturer_id"], day, time_slot)] == 0)
 
 # Solve the model
 solver = cp_model.CpSolver()
@@ -114,8 +73,8 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         )
         if lecturer:
             for day in days:
-                for time_slot, bitmask in enumerate(lecturer[day]):
-                    if bitmask == "1" and solver.Value(
+                for time_slot in range(10):
+                    if solver.Value(
                         timetable[(module["lecturer_id"], day, time_slot)]
                     ):
                         print(
