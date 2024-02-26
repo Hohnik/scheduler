@@ -1,3 +1,4 @@
+import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
 
@@ -139,15 +140,16 @@ def run_model():
     # Solve the model
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
-    print(solver.StatusName())
-    print(solver.NumBooleans(), solver.NumBranches(), solver.NumConflicts())
-
+    print( f"Status:{solver.StatusName()}",f"Bools:{solver.NumBooleans()}", f"Branches:{solver.NumBranches()}", f"Conflicts:{solver.NumConflicts()}", sep="\n", end="\n\n")
+    solution = {}
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         for semester in semesters:
+            solution.update({semester:{}})
             print(f'Semester {semester}:')
             for day in days:
                 print(f'{day}:')
+                solution[semester].update({day:{}})
                 for time_slot in time_slots:
                     for lecturer in lecturers:
                         for module in modules:
@@ -161,10 +163,7 @@ def run_model():
                                     )
             print()
 
-        print("solved")
-        print(solver.StatusName())
-        print(solver.NumBooleans(), solver.NumBranches(), solver.NumConflicts())
-        #print(room_ids_dic)
+        pprint.pprint(solution)
         return
     else:
         print("No feasible solution found.")
