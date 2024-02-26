@@ -163,14 +163,21 @@ def run_model():
                 print(f'{day}:')
                 solution[semester].update({day:{}})
                 for time_slot in time_slots:
+                    solution[semester][day].update({time_slot:[]})
                     for lecturer in lecturers:
                         for module in modules:
                             for room in rooms:
                                 
-                                if solver.Value(
-                                    timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
-                                ):
+                                if solver.Value(timetable[(
+                                        lecturer_ids_dic[lecturer["lecturer_id"]], 
+                                        module_ids_dic[module["module_id"]],
+                                        semesters_dic[semester], 
+                                        days_dic[day], 
+                                        time_slot, 
+                                        room_ids_dic[room["room_id"]])]):
+
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
+                                    solution[semester][day][time_slot].append([module["module_id"], lecturer["lecturer_id"]])
                                     print(
                                         #f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
                                         f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} von Professor {lecturer["lecturer_name"]}'
