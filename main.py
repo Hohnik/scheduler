@@ -10,13 +10,15 @@ from utils.table_printer import TablePrinter
 
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
-#TODO: remove sws_pu and participants_lu from modules.csv file and create new modules instead
-#TODO: for performance try to merge contraints into one for loop struct (save previous for loop values)
-#TODO: if necessary, add gender, etc. to lecturers for german spelling and other information
+#TODO[x]: remove sws_pu and participants_lu from modules.csv file and create new modules instead
+#TODO[ ]: tidy up code, create classes and methods, OOP
+#TODO[ ]: for performance try to merge contraints into one for loop struct (save previous for loop values)
+#TODO[ ]: if necessary, add gender, etc. to lecturers for german spelling and other information
+#TODO[ ]: implement print function in different languages
 
-#HEURISTIC: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
-#HEURISTIC: for each semester for each day, Optimise: same room for as long as possible
-#HEURISTIC: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance)
+#HEURISTIC[ ]: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
+#HEURISTIC[ ]: for each semester for each day, Optimise: same room for as long as possible
+#HEURISTIC[ ]: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance)
 
 def run_model():
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
@@ -52,6 +54,7 @@ def run_model():
     room_ids_dic = {room_id: num for num, room_id in enumerate(room_ids)}
     semesters_dic = {semester: num for num, semester in enumerate(semesters)}
     days_dic = {day: num for num, day in enumerate(days)}
+    days_uniform_dic = {day: day[:3] for day in days}
     
     
     
@@ -191,12 +194,19 @@ def run_model():
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
                                     solution[semester][day][time_slot].append([module["module_id"], lecturer["lecturer_id"]])
                                     print(
-                                        #f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
-                                        f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
+                                        f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
+                                        #f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
                                     )
                     
         print(numof_available_rooms(available_rooms_dic, days, time_slots))
         print([(module["module_id"], module["participants"]) for module in modules])
+        for semester in semesters:
+            for day in days:
+                solution[semester][days_uniform_dic[day]] = solution[semester][day]
+        for semester in semesters:
+            for day in days:
+                del solution[semester][day]
+
         pprint.pprint(solution)
         return solution
     else:

@@ -1,13 +1,13 @@
 module_id,semester,sws,participants,lecturer_id,module_name
-KI210l,2,2,49,L01,Data Science II
-KI220l,2,4,48,L05,Mathematik II
-KI230l,2,4,38,L04,Programmieren II
-KI240l,2,2,34,L04,Praxisgrundlagen der Informatik
-KI250l,2,3,48,L03,Statistik
-KI410l,4,2,32,L07,Algorithmen und Datenstrukturen
-KI420l,4,2,44,L08,Software Engineering I
-KI430l,4,4,49,L02,Natural Language Processing
-KI440l,4,4,24,L03,Machine Learning II
-KI450l,4,2,29,L01,Künstliche Intelligenz II
-KI610l,6,2,41,L07,Big Data Algorithms
-KI620l,6,2,45,L02,Machine Learning III
+KI210l,2,2,44,L01,Data Science II
+KI220l,2,4,41,L05,Mathematik II
+KI230l,2,4,33,L04,Programmieren II
+KI240l,2,2,50,L04,Praxisgrundlagen der Informatik
+KI250l,2,3,46,L03,Statistik
+KI410l,4,2,27,L07,Algorithmen und Datenstrukturen
+KI420l,4,2,43,L08,Software Engineering I
+KI430l,4,4,44,L02,Natural Language Processing
+KI440l,4,4,40,L03,Machine Learning II
+KI450l,4,2,45,L01,Künstliche Intelligenz II
+KI610l,6,2,43,L07,Big Data Algorithms
+KI620l,6,2,35,L02,Machine Learning III
