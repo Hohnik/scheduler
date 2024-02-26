@@ -4,7 +4,7 @@ import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from generate_lecturer_data import create_data
+from utils.generate_lecturer_data import create_data
 
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
