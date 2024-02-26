@@ -11,7 +11,9 @@ import pandas as pd
 
 def create_data():
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
+    
     lecturers_data = lecturers_df.to_dict(orient="records")
+    
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
     lst_bool = [True, False]
 

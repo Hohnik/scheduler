@@ -4,7 +4,8 @@ import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from generate_lecturer_data import create_data
+import generate_lecturers_data as gld
+import generate_modules_data as gmd
 
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
@@ -70,7 +71,7 @@ def run_model():
     print(len(timetable))
 
     # Define the constraints
-    # Implied that lecturers only give lectures if time_slot bit == "1" | Lecturers only give lectures when they are free (bit == "1")
+    # Implied for every lecturer for every time_slot that time_slot bit == "1" | Lecturers only give lectures when they are free (bit == "1")
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -101,6 +102,17 @@ def run_model():
                         for room in rooms:
                             model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
                                 semester == module["semester"]
+                                )
+
+    # Implied for every room that room["capacity"] >= module["participants"]
+    for lecturer in lecturers:
+        for module in modules:
+            for semester in semesters:
+                for day in days:
+                    for time_slot in time_slots:
+                        for room in rooms:
+                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                                room["capacity"] >= module["participants"]
                                 )
 
     # At most one room per module per time_slot | Every room and time_slot only gets one module
@@ -143,8 +155,6 @@ def run_model():
             for room in rooms
         ]) == int(module["sws"]) * 2)
 
-
-
     # Solve the model
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
@@ -173,7 +183,7 @@ def run_model():
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
                                     print(
                                         #f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
-                                        f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} von Professor {lecturer["lecturer_name"]}'
+                                        f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
                                     )
                     
             print()
@@ -181,10 +191,12 @@ def run_model():
         pprint.pprint(solution)
 
         print(numof_available_rooms(available_rooms_dic, days, time_slots))
+        print([(module["module_id"], module["participants"]) for module in modules])
         return
     else:
         print("No feasible solution found.")
-        create_data()
+        gld.create_data()
+        gmd.create_data()
         run_model()
 
 
@@ -200,5 +212,6 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
     return n_a_r_l_dic
     
 
-create_data()
+gld.create_data()
+gmd.create_data()
 run_model()
