@@ -5,6 +5,7 @@ import pandas as pd
 from ortools.sat.python import cp_model
 
 from utils.generate_lecturer_data import create_data
+from utils.table_printer import TablePrinter
 
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
@@ -157,6 +158,7 @@ def run_model():
                                for time_slot in time_slots
                                }
         for semester in semesters:
+            print()
             solution.update({semester:{}})
             print(f'Semester {semester}:')
             for day in days:
@@ -183,12 +185,9 @@ def run_model():
                                         f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} von Professor {lecturer["lecturer_name"]}'
                                     )
                     
-            print()
-        
-        pprint.pprint(solution)
-
         print(numof_available_rooms(available_rooms_dic, days, time_slots))
-        return
+        pprint.pprint(solution)
+        return solution
     else:
         print("No feasible solution found.")
         create_data()
@@ -207,5 +206,6 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
     return n_a_r_l_dic
     
 
-create_data()
-run_model()
+# create_data()
+result_object = run_model()
+printer = TablePrinter(result_object)
