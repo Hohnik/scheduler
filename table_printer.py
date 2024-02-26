@@ -1,3 +1,5 @@
+# Add option for more courses (KI, WI, etc.)
+
 class TablePrinter():
     """
     {

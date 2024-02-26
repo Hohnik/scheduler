@@ -1,12 +1,20 @@
+# by Niklas Hohn & Julien Sauter
+
 import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
 
 from generate_lecturer_data import create_data
 
-#INFO: remove sws_pu and participants_lu from modules.csv file and create new modules instead
-#INFO: for performance try to merge contraints into one for loop struct (save previous for loop values)
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
+
+#TODO: remove sws_pu and participants_lu from modules.csv file and create new modules instead
+#TODO: for performance try to merge contraints into one for loop struct (save previous for loop values)
+#TODO: if necessary, add gender, etc. to lecturers for german spelling and other information
+
+#HEURISTIC: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
+#HEURISTIC: for each semester for each day, Optimise: same room for as long as possible
+#HEURISTIC: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance)
 
 def run_model():
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
@@ -144,6 +152,10 @@ def run_model():
     solution = {}
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        available_rooms_dic = {(day, time_slot): [room_id for room_id in room_ids]
+                               for day in days
+                               for time_slot in time_slots
+                               }
         for semester in semesters:
             solution.update({semester:{}})
             print(f'Semester {semester}:')
@@ -158,17 +170,35 @@ def run_model():
                                 if solver.Value(
                                     timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
                                 ):
+                                    available_rooms_dic[(day, time_slot)].remove(room["room_id"])
                                     print(
-                                        f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
+                                        #f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
+                                        f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} von Professor {lecturer["lecturer_name"]}'
                                     )
+                    
             print()
-
+        
         pprint.pprint(solution)
+
+        print(numof_available_rooms(available_rooms_dic, days, time_slots))
         return
     else:
         print("No feasible solution found.")
         create_data()
         run_model()
+
+
+# number of available rooms per time_slot
+def numof_available_rooms(available_rooms_dic, days, time_slots):
+    numof_available_rooms_lst = [len(available_rooms_dic[(day, time_slot)]) for day in days for time_slot in time_slots]
+    n_a_r_l_dic = {}
+    for elem in numof_available_rooms_lst:
+        if elem in n_a_r_l_dic:
+            n_a_r_l_dic[elem] += 1
+        else:
+            n_a_r_l_dic[elem] = 1
+    return n_a_r_l_dic
+    
 
 create_data()
 run_model()
