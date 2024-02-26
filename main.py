@@ -204,7 +204,7 @@ def run_model():
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
                                     solution[semester][day][time_slot].append([module["module_id"], lecturer["lecturer_id"]])
                                     print(
-                                        f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
+                                        f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
                                         #f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
                                     )
                     
