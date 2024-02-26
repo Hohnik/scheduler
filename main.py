@@ -1,5 +1,15 @@
 # by Niklas Hohn & Julien Sauter
 
+# course = KI(unknown), etc.
+# module = KI210l(dic), etc.
+# lecturer = L01(dic), etc.
+# room = G005(dic), etc.
+# semester = 1, etc.
+# day = monday, etc.
+# lecturer[day] = 1010111010, etc.
+
+
+
 import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
@@ -18,7 +28,7 @@ from utils.table_printer import TablePrinter
 
 #HEURISTIC[ ]: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
 #HEURISTIC[ ]: for each semester for each day, Optimise: same room for as long as possible
-#HEURISTIC[ ]: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance)
+#HEURISTIC[ ]: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance -OR- constraint courses have specific buildings)
 
 def run_model():
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
