@@ -3,11 +3,13 @@ from ortools.sat.python import cp_model
 
 from generate_lecturer_data import create_data
 
-#INFO: Remove sws_pu and participants_lu from modules.csv file and create new modules instead
+#INFO: remove sws_pu and participants_lu from modules.csv file and create new modules instead
+#INFO: for performance try to merge contraints into one for loop struct (save previous for loop values)
+#INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
 def run_model():
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
-    modules_df = pd.read_csv("db/modules.csv", dtype=str)
+    modules_df = pd.read_csv("db/modules_no_p.csv", dtype=str)
     rooms_df = pd.read_csv("db/rooms.csv", dtype=str)
 
     lecturers_data = lecturers_df.to_dict(orient="records")
@@ -50,60 +52,88 @@ def run_model():
         for module in modules:
             for semester in semesters:
                 for day in days:
-                    for time_slot, bit in enumerate(lecturer[day]):
+                    for time_slot in time_slots:
                         for room in rooms:
                             timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])] = model.NewBoolVar(
                                 f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}'
                             )
 
+    print(len(timetable))
+
     # Define the constraints
-    # Lecturers only give lectures when they are free (bit == '1')
+    # Implied that lecturers only give lectures if time_slot bit == "1" | Lecturers only give lectures when they are free (bit == "1")
     for lecturer in lecturers:
         for module in modules:
-            if module["lecturer_id"] == lecturer["lecturer_id"]:
+            for semester in semesters:
                 for day in days:
                     for time_slot, bit in enumerate(lecturer[day]):
-                        model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[module["semester"]], days_dic[day], time_slot, room_ids_dic[room["room_id"]])], bit == "1")
-        
-    # A lecturer cannot be scheduled for two modules at the same time
+                        for room in rooms:
+                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                                bit == "1"
+                                )
+
+    # Implied for every module that module["lecturer_id"] == lecturer["lecturer_id"]
+    for lecturer in lecturers:
+        for module in modules:
+            for semester in semesters:
+                for day in days:
+                    for time_slot in time_slots:
+                        for room in rooms:
+                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                                module["lecturer_id"] == lecturer["lecturer_id"]
+                                )
+
+    # Implied for every module that semester == module["semester"]
+    for lecturer in lecturers:
+        for module in modules:
+            for semester in semesters:
+                for day in days:
+                    for time_slot in time_slots:
+                        for room in rooms:
+                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                                semester == module["semester"]
+                                )
+
+    # At most one room per module per time_slot | Every room and time_slot only gets one module
+    for day in days:
+        for time_slot in time_slots:
+            for room in rooms:
+                model.AddAtMostOne(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
+                for lecturer in lecturers
+                for module in modules
+                for semester in semesters
+                )
+
+    # At most one module per lecturer per time_slot | A lecturer cannot be scheduled for two modules at the same time
     for lecturer in lecturers:
         for day in days:
             for time_slot in time_slots:
                 model.AddAtMostOne(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
-                    for module in modules
+                for module in modules
+                for semester in semesters
+                for room in rooms
                 )
 
-    # Only one module per semester per time_slot
+    # At most one module per semester per time_slot
     for semester in semesters:
         for day in days:
             for time_slot in time_slots:
-                model.AddAtMostOne(timetable[(lecturer_ids_dic[module["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
-                    for module in modules
-
+                model.AddAtMostOne(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
+                for lecturer in lecturers
+                for module in modules
+                for room in rooms
                 )
     
-    # All sws have to be taken
+    # Sum( time_slots for module ) == module["sws"] | All sws have to be taken
     for module in modules:
-        model.Add(cp_model.LinearExpr.Sum([timetable[(lecturer_ids_dic[module["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[module["semester"]], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
+        model.Add(cp_model.LinearExpr.Sum([timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
+            for lecturer in lecturers
+            for semester in semesters
             for day in days
             for time_slot in time_slots
-        ]) == int(module["sws_lu"])  )
+            for room in rooms
+        ]) == int(module["sws"]) * 2)
 
-#    # A room cannot be scheduled for two modules at the same time
-#    for day in days:
-#       for time_slot in time_slots:
-#            for room in rooms:
-#                model.AddAtMostOne(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
-#                for module in modules
-#                )
-#
-#    # A module cannot be scheduled for two rooms at the same time
-#    for day in days:
-#        for time_slot in time_slots:
-#            for module in modules:
-#                model.AddAtMostOne(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[module["semester"]], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
-#                    for room in rooms
-#                )
 
 
     # Solve the model
@@ -119,27 +149,22 @@ def run_model():
             for day in days:
                 print(f'{day}:')
                 for time_slot in time_slots:
-                    for module in modules:
-                        for room in rooms:
-                            lecturer = next((lecturer
-                                    for lecturer in lecturers
-                                    if lecturer["lecturer_id"] == module["lecturer_id"]
-                                ),
-                                None,
-                            )
-                            
-                            if solver.Value(
-                                timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
-                            ):
-                                print(
-                                    f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
-                                )
+                    for lecturer in lecturers:
+                        for module in modules:
+                            for room in rooms:
+                                
+                                if solver.Value(
+                                    timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
+                                ):
+                                    print(
+                                        f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} by Lecturer {lecturer["lecturer_name"]}'
+                                    )
             print()
 
         print("solved")
         print(solver.StatusName())
         print(solver.NumBooleans(), solver.NumBranches(), solver.NumConflicts())
-        print(room_ids_dic)
+        #print(room_ids_dic)
         return
     else:
         print("No feasible solution found.")

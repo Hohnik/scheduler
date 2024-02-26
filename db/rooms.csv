@@ -1,6 +1,6 @@
 room_id,capacity,is_practice_room
-J101,30,False
-G018,45,False
 G005,60,False
-K016,30,True
+G018,45,False
+J101,30,False
 K012,30,True
+K016,30,True

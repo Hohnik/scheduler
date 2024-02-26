@@ -1,0 +1,14 @@
+room_id,capacity,is_practice_room
+G001,60,False
+G002,60,False
+G003,60,False
+G004,60,False
+G005,60,False
+G006,60,False
+G007,60,False
+G008,60,False
+G009,60,False
+G018,45,False
+J101,30,False
+K012,30,True
+K016,30,True

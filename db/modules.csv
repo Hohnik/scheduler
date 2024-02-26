@@ -1,4 +1,4 @@
-module_id,semester,sws_lu,participants_lu,participants_pu,lecturer_id,module_name
+module_id,semester,sws,participants_lu,participants_pu,lecturer_id,module_name
 KI210l,2,2,50,20,L01,Data Science II
 KI210p,2,2,50,20,L01,Data Science II Praktikum
 KI220l,2,4,50,20,L05,Mathematik II
