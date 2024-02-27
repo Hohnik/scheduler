@@ -18,20 +18,28 @@ from utils.table_printer import TablePrinter
 
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
-#TODO[x]: remove sws_pu and participants_lu from modules.csv file and create new modules instead
-#TODO[ ]: tidy up code, create classes and methods, OOP
-#TODO[ ]: for performance try to merge contraints into one for loop struct (save previous for loop values)
-#TODO[ ]: if necessary, add gender, etc. to lecturers for german spelling and other information
-#TODO[ ]: implement print function in different languages
+
+
+#TODO[ ] IMPORTANT: time_slots are currently treated as 60 minute windows, even though they are 45 min. This drastically changes how we have to check if sws per module are being taught. >= won't be enough because we don't want to overbook modules.
+
+
+
+#TODO[x] remove sws_pu and participants_lu from modules.csv file and create new modules instead
+#TODO[ ] tidy up code, create classes and methods, OOP
+#TODO[ ] for performance try to merge contraints into one for loop struct (save previous for loop values)
+#TODO[ ] if necessary, add gender, etc. to lecturers for german spelling and other information
+#TODO[ ] implement print function (or equivalent/analogous output) in different languages
+#TODO[ ] MAYBE: Let courses define more accurately what they need in a room, instead of just lecture vs practice
 
 #HEURISTIC[ ]: for each module, Optimise: same room (same room -OR- constraint modules are always same room)
 #HEURISTIC[ ]: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
 #HEURISTIC[ ]: for each semester for each day, Optimise: same room for as long as possible
 #HEURISTIC[ ]: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance -OR- constraint courses have specific buildings)
+#HEURISTIC[ ]: for each module for each room, Optimise: just over half full rooms (normal distribution, slightly right-skewed)
 
 def run_model():
     
-    # Read in data fil
+    # Read in data file
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
     modules_df = pd.read_csv("db/modules.csv", dtype=str)
     rooms_df = pd.read_csv("db/rooms.csv", dtype=str)
@@ -71,7 +79,7 @@ def run_model():
     room_ids = [room["room_id"] for room in rooms]
     
     # Create other data sources
-    semesters = list(set([dct["semester"] for dct in modules_data]))
+    semesters = list(set([module["semester"] for module in modules]))
     semesters.sort()
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
     time_slots = range(10)
@@ -83,6 +91,10 @@ def run_model():
     semesters_dic = {semester: num for num, semester in enumerate(semesters)}
     days_dic = {day: num for num, day in enumerate(days)}
     days_uniform_dic = {day: day[:3] for day in days}
+    
+    # Add course to module dictionary
+    for module in modules:
+        module["course"] = module["module_id"][1:3]
     
     
 
@@ -124,7 +136,7 @@ def run_model():
                                 lecturer["lecturer_id"] in module["lecturer_id"]
                                 )
 
-    # Implied for every module that semester == module["semester"]
+    # Implied for every module that semester == module["semester"] | modules linked to respective semesters
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -135,7 +147,7 @@ def run_model():
                                 semester == module["semester"]
                                 )
 
-    # Implied for every room that room["capacity"] >= module["participants"]
+    # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -146,7 +158,7 @@ def run_model():
                                 room["capacity"] >= module["participants"]
                                 )
 
-    # Implied for every room that module["module_id"][0] == room["room_type"]
+    # Implied for every room that module["module_id"][0] == room["room_type"] | room type fits to module type
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -157,7 +169,7 @@ def run_model():
                                 module["module_id"][0] == room["room_type"]
                                 )
 
-    # At most one room per module per time_slot | for each time_slot two modules cannot be scheduled in the same room
+    # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     for day in days:
         for time_slot in time_slots:
             for room in rooms:
@@ -177,7 +189,7 @@ def run_model():
                 for room in rooms
                 )
 
-    # At most one module per semester per time_slot | for each semester two modules cannot be scheduled at the same time
+    # At most one module per semester per time_slot | two modules in the same semester cannot be scheduled at the same time
     for semester in semesters:
         for day in days:
             for time_slot in time_slots:
@@ -187,7 +199,7 @@ def run_model():
                 for room in rooms
                 )
     
-    # Sum( time_slots for module ) == module["sws"] | All sws have to be taken
+    # Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
     for module in modules:
         model.Add(cp_model.LinearExpr.Sum([timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])]
             for lecturer in lecturers
@@ -218,7 +230,7 @@ def run_model():
                 print(f'{day}:')
                 solution[semester].update({day:{}})
                 for time_slot in time_slots:
-                    solution[semester][day].update({time_slot:[]})
+                    solution[semester][day].update({time_slot:[]}) # @niklas Why not another dictionary with keys as id's from the variables from the for loops below and values as the variable itself (timeslot:{lecturer_id: lecturer, module_id: module, room_id: room})?
                     for lecturer in lecturers:
                         for module in modules:
                             for room in rooms:
