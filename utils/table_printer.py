@@ -71,8 +71,10 @@ obj = {
         },
         "4": {}
     }
-TablePrinter(obj).print_tables()
-# printer = TablePrinter(obj)
-# print(printer._generate_header(2), end="")
-# print(printer._generate_footer(), end="")
-# print(printer._generate_semester(2))
+
+if __name__ == "__main__":
+    TablePrinter(obj).print_tables()
+    # printer = TablePrinter(obj)
+    # print(printer._generate_header(2), end="")
+    # print(printer._generate_footer(), end="")
+    # print(printer._generate_semester(2))
