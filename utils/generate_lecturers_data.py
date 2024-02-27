@@ -10,6 +10,7 @@ import pandas as pd
 
 
 def create_data():
+    # TODO remove read from file
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
     
     lecturers_data = lecturers_df.to_dict(orient="records")
