@@ -1,28 +1,28 @@
 module_id,semester,sws,participants,lecturer_id,module_name
-lKI210,2KI,2,32,001,Data Science II
+lKI210,2KI,2,48,001,Data Science II
 pKI210,2KI,2,0,001,Data Science II Praktikum
-lKI220,2KI,4,44,005,Mathematik II
+lKI220,2KI,4,34,005,Mathematik II
 pKI220,2KI,2,0,005,Mathematik II Praktikum
-lKI230,2KI,4,22,004,Programmieren II
+lKI230,2KI,4,49,004,Programmieren II
 pKI230,2KI,2,0,004,Programmieren II Praktikum
-lKI240,2KI,2,39,004,Praxisgrundlagen der Informatik
+lKI240,2KI,2,37,004,Praxisgrundlagen der Informatik
 pKI240,2KI,2,0,004-006-001,Praxisgrundlagen der Informatik Praktikum
-lKI250,2KI,3,34,003,Statistik
+lKI250,2KI,3,40,003,Statistik
 pKI250,2KI,1,0,003,Statistik Praktikum
-lKI410,4KI,2,28,007,Algorithmen und Datenstrukturen
+lKI410,4KI,2,38,007,Algorithmen und Datenstrukturen
 pKI410,4KI,2,0,007,Algorithmen und Datenstrukturen Praktikum
-lKI420,4KI,2,48,008,Software Engineering I
+lKI420,4KI,2,47,008,Software Engineering I
 pKI420,4KI,2,0,008,Software Engineering I Praktikum
-lKI430,4KI,4,39,002,Natural Language Processing
+lKI430,4KI,4,22,002,Natural Language Processing
 pKI430,4KI,2,0,002-001,Natural Language Processing Praktikum
-lKI440,4KI,4,28,003,Machine Learning II
+lKI440,4KI,4,41,003,Machine Learning II
 pKI440,4KI,2,0,003-001-002,Machine Learning II Praktikum
-lKI450,4KI,2,46,001,Künstliche Intelligenz II
+lKI450,4KI,2,50,001,Künstliche Intelligenz II
 pKI450,4KI,2,0,001,Künstliche Intelligenz II Praktikum
-lKI610,6KI,2,35,007,Big Data Algorithms
+lKI610,6KI,2,40,007,Big Data Algorithms
 pKI610,6KI,2,0,007,Big Data Algorithms Praktikum
-lKI620,6KI,2,26,002,Machine Learning III
+lKI620,6KI,2,42,002,Machine Learning III
 pKI620,6KI,2,0,002-003-001,Machine Learning III Praktikum
-lIB010,1IB,4,49,009,Grundlagen der Informatik
-lIB015,1IB,4,48,007,Grundlagen der theoretischen Informatik
+lIB010,1IB,4,46,009,Grundlagen der Informatik
+lIB015,1IB,4,46,007,Grundlagen der theoretischen Informatik
 pIB015,1IB,2,0,007-004,Grundlagen der theoretischen Informatik
