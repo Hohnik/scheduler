@@ -24,8 +24,8 @@ class TablePrinter():
 
     def _generate_header(self,semester):
         fields = []
-        fields.append(f"{semester:^{self.col_width //2}}")
-        fields += list(map(lambda weekday: f"{str.capitalize(weekday):^{self.col_width}}", self.days))
+        fields.append(f'{semester:^{self.col_width //2}}')
+        fields += list(map(lambda weekday: f'{str.capitalize(weekday):^{self.col_width}}', self.days))
 
         result = ""
         result += self.line_top
@@ -37,7 +37,7 @@ class TablePrinter():
         result = ""
         for time_slot in range(10):
             result += self.line
-            result += f"|{time_slot:^{self.col_width //2}}|"
+            result += f'|{time_slot:^{self.col_width //2}}|'
 
             fields = []
             for day in self.days:
@@ -46,7 +46,7 @@ class TablePrinter():
                     text = f'{data["module"]["module_id"]}, {data["lecturer"]["lecturer_name"]}'
                     fields.append(f'{text:<{self.col_width}}')
                 except KeyError:
-                    fields.append(f"{"---":^{self.col_width}}")
+                    fields.append(f'{"---":^{self.col_width}}')
             result += "|".join(fields) + "|\n"
 
         return result
