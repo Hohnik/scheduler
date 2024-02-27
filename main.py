@@ -259,6 +259,7 @@ def run_model():
                                         "room": room
                                         })
                                     
+                                    
                                     print(
                                         f'{time_slot} {module_id_nicer:7} {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) {lecturer["lecturer_name"]}'
                                         #f'At time slot {time_slot} {module_id_nicer} is being taught in room {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
@@ -267,7 +268,7 @@ def run_model():
                     
         print(numof_available_rooms(available_rooms_dic, days, time_slots))
         
-        print([(module["module_id"], module["participants"]) for module in modules])
+        # print([(module["module_id"], module["participants"]) for module in modules])
         for semester in semesters:
             for day in days:
                 solution[semester][days_uniform_dic[day]] = solution[semester][day]
@@ -300,3 +301,4 @@ gld.create_data()
 gmd.create_data()
 result_object = run_model()
 printer = TablePrinter(result_object)
+printer.print_tables()

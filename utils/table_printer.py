@@ -43,7 +43,7 @@ class TablePrinter():
             for day in self.days:
                 try:
                     data = self.solution[semester][day][time_slot]
-                    text = f'{data["module"]["id"]}, {data["lecturer"]["name"]}'
+                    text = f'{data["module"]["module_id"]}, {data["lecturer"]["lecturer_name"]}'
                     fields.append(f'{text:<{self.col_width}}')
                 except KeyError:
                     fields.append(f"{"---":^{self.col_width}}")
@@ -62,7 +62,7 @@ class TablePrinter():
             for day in semester.values():
                 for slot in day.values():
                     try: 
-                        words.append(len(slot["lecturer"]["name"]) + len(slot["module"]["id"]))
+                        words.append(len(slot["lecturer"]["lecturer_name"]) + len(slot["module"]["module_id"]))
                     except KeyError:
                         pass
         return max(words) + 3
