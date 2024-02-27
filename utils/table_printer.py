@@ -14,13 +14,9 @@ class TablePrinter():
     column_width = 12
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
-    line_top = "┏"+f"{"━"*(column_width//2)}"+"┳"+(("━"*column_width)+"┳")*(len(days)-1)+ ("━"*column_width)+"┓\n"
-    line = "┣"+f"{"━"*(column_width//2)}"+"╋"+(("━"*column_width)+"╋")*(len(days)-1)+ ("━"*column_width)+"┫\n"
-    line_bot = "┗"+f"{"━"*(column_width//2)}"+"┻"+(("━"*column_width)+"┻")*(len(days)-1)+ ("━"*column_width)+"┛\n"
-
-    # line_top = "+"+"-"*(column_width//2)+"+"+(("-"*column_width)+"+")*(len(days)-1)+ ("-"*column_width)+"+\n"
-    # line = "+"+"-"*(column_width//2)+"+"+(("-"*column_width)+"+")*(len(days)-1)+ ("-"*column_width)+"+\n"
-    # line_bot = "+"+"-"*(column_width//2)+"+"+(("-"*column_width)+"+")*(len(days)-1)+ ("-"*column_width)+"+\n"
+    line_top = "+"+"-"*(column_width//2)+"+"+(("-"*column_width)+"+")*(len(days)-1)+ ("-"*column_width)+"+\n"
+    line = "+"+"-"*(column_width//2)+"+"+(("-"*column_width)+"+")*(len(days)-1)+ ("-"*column_width)+"+\n"
+    line_bot = "+"+"-"*(column_width//2)+"+"+(("-"*column_width)+"+")*(len(days)-1)+ ("-"*column_width)+"+\n"
 
     def __init__(self, solution_object: dict[str, dict[str, dict[int, list]]]) -> None:
         self.solution = solution_object
@@ -48,6 +44,7 @@ class TablePrinter():
         result = ""
         result += self.line_top
         result += "|" + "|".join(fields) + "|\n"
+
         result += self.line
         return result
     
