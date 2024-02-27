@@ -253,10 +253,11 @@ def run_model():
                                     module_id_nicer = module["module_id"][1:] + module["module_id"][0]
                                     
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
-                                    
-                                    solution[semester][day][time_slot][lecturer["lecturer_id"]] = lecturer
-                                    solution[semester][day][time_slot][module["module_id"]] = module
-                                    solution[semester][day][time_slot][room["room_id"]] = room
+                                    solution[semester][day][time_slot].update({
+                                        "lecturer": lecturer,
+                                        "module": module,
+                                        "room": room
+                                        })
                                     
                                     print(
                                         f'{time_slot} {module_id_nicer:7} {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) {lecturer["lecturer_name"]}'
