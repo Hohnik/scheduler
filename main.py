@@ -150,35 +150,35 @@ def run_model():
                                 module["module_id"][0] == room["room_type"]
                                 )
 
-    # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws == 3: 3, elif leftover_sws == 1: 1 else: leftover_sws -= 2: 2)
-    for lecturer in lecturers:
-        for module in modules:
-            for semester in semesters:
-                for day in days:
-                    for time_slot in time_slots:
-                        for room in rooms:
-                            l = lecturer_ids_dic[lecturer["lecturer_id"]]
-                            m = module_ids_dic[module["module_id"]]
-                            s = semesters_dic[semester], days_dic[day]
-                            t = time_slot
-                            r = room_ids_dic[room["room_id"]]
-                            
-                            if leftover_sws == 0:
-                                0
-                                # break
-                            elif leftover_sws == 3:
-                                leftover_sws -= 3
-                                3
-                            elif leftover_sws == 1:
-                                leftover_sws -= 1
-                                1
-                            else:
-                                leftover_sws -= 2
-                                2
-
-                            model.AddImplication(timetable[(l, m, s, t, r)], timetable[(l, m, s, t+1, r)])
-                            model.AddImplication(timetable[(l, m, s, t+1, r)], timetable[(l, m, s, t+2, r)])
-                            model.AddImplication(timetable[(l, m, s, t+2, r)], timetable[(l, m, s, t+3, r)])
+#    # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws == 3: 3, elif leftover_sws == 1: 1 else: leftover_sws -= 2: 2)
+#    for lecturer in lecturers:
+#        for module in modules:
+#            for semester in semesters:
+#                for day in days:
+#                    for time_slot in time_slots:
+#                        for room in rooms:
+#                            l = lecturer_ids_dic[lecturer["lecturer_id"]]
+#                            m = module_ids_dic[module["module_id"]]
+#                            s = semesters_dic[semester], days_dic[day]
+#                            t = time_slot
+#                            r = room_ids_dic[room["room_id"]]
+#                            
+#                            if leftover_sws == 0:
+#                                0
+#                                # break
+#                            elif leftover_sws == 3:
+#                                leftover_sws -= 3
+#                                3
+#                            elif leftover_sws == 1:
+#                                leftover_sws -= 1
+#                                1
+#                            else:
+#                                leftover_sws -= 2
+#                                2
+#
+#                            model.AddImplication(timetable[(l, m, s, t, r)], timetable[(l, m, s, t+1, r)])
+#                            model.AddImplication(timetable[(l, m, s, t+1, r)], timetable[(l, m, s, t+2, r)])
+#                            model.AddImplication(timetable[(l, m, s, t+2, r)], timetable[(l, m, s, t+3, r)])
                             
 
 
