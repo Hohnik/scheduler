@@ -1,7 +1,4 @@
 #Project wide
-**/__pycache__/
-**/lecturers.csv
-**/modules.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
