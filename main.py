@@ -300,5 +300,6 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
 gld.create_data()
 gmd.create_data()
 result_object = run_model()
+# pprint.pprint(result_object)
 printer = TablePrinter(result_object)
 printer.print_tables()

@@ -1,5 +1,5 @@
 class TablePrinter():
-    days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    days = ["mon", "tue", "wed", "thu", "fri"]
     def __init__(self, solution: dict[str, dict[str, dict[int, list]]]) -> None:
         self.solution = solution
         self.col_width = self.calc_dynamic_col_width(solution)
@@ -47,6 +47,7 @@ class TablePrinter():
                     fields.append(f'{text:<{self.col_width}}')
                 except KeyError:
                     fields.append(f'{"---":^{self.col_width}}')
+                    continue
             result += "|".join(fields) + "|\n"
 
         return result
