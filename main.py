@@ -19,7 +19,7 @@ from utils.table_printer import TablePrinter
 #INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
 
-
+#TODO[ ] IMPORTANT: fix solution object: see table_printer.py for example object
 #TODO[ ] IMPORTANT: time_slots are currently treated as 60 minute windows, even though they are 45 min. This drastically changes how we have to check if sws per module are being taught. >= won't be enough because we don't want to overbook modules.
 
 
