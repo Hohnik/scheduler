@@ -1,6 +1,6 @@
-room_id,capacity,is_practice_room
-G005,60,False
-G018,45,False
-J101,30,False
-K012,30,True
-K016,30,True
+room_id,capacity,room_type
+G005,60,l
+G018,45,l
+J101,30,l
+K012,30,p
+K016,16,p

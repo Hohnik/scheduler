@@ -1,25 +1,25 @@
 module_id,semester,sws,participants,lecturer_id,module_name
-KI210l,2,2,50,L01,Data Science II
-KI210p,2,2,20,L01,Data Science II Praktikum
-KI220l,2,4,50,L05,Mathematik II
-KI220p,2,2,20,L05,Mathematik II Praktikum
-KI230l,2,4,50,L04,Programmieren II
-KI230p,2,2,20,L04,Programmieren II Praktikum
-KI240l,2,2,50,L04,Praxisgrundlagen der Informatik
-KI240p,2,2,20,L04,Praxisgrundlagen der Informatik Praktikum
-KI250l,2,3,50,L03,Statistik
-KI250p,2,1,20,L03,Statistik Praktikum
-KI410l,4,2,50,L07,Algorithmen und Datenstrukturen
-KI410p,4,2,20,L07,Algorithmen und Datenstrukturen Praktikum
-KI420l,4,2,50,L08,Software Engineering I
-KI420p,4,2,20,L08,Software Engineering I Praktikum
-KI430l,4,4,50,L02,Natural Language Processing
-KI430p,4,2,20,L02,Natural Language Processing Praktikum
-KI440l,4,4,50,L03,Machine Learning II
-KI440p,4,2,20,L03,Machine Learning II Praktikum
-KI450l,4,2,50,L01,Künstliche Intelligenz II
-KI450p,4,2,20,L01,Künstliche Intelligenz II Praktikum
-KI610l,6,2,50,L07,Big Data Algorithms
-KI610p,6,2,20,L07,Big Data Algorithms Praktikum
-KI620l,6,2,50,L02,Machine Learning III
-KI620p,6,2,20,L02,Machine Learning III Praktikum
+lKI210,2,2,46,L01,Data Science II
+pKI210,2,2,0,L01,Data Science II Praktikum
+lKI220,2,4,45,L05,Mathematik II
+pKI220,2,2,0,L05,Mathematik II Praktikum
+lKI230,2,4,32,L04,Programmieren II
+pKI230,2,2,0,L04,Programmieren II Praktikum
+lKI240,2,2,25,L04,Praxisgrundlagen der Informatik
+pKI240,2,2,0,L04-L06-L01,Praxisgrundlagen der Informatik Praktikum
+lKI250,2,3,50,L03,Statistik
+pKI250,2,1,0,L03,Statistik Praktikum
+lKI410,4,2,36,L07,Algorithmen und Datenstrukturen
+pKI410,4,2,0,L07,Algorithmen und Datenstrukturen Praktikum
+lKI420,4,2,29,L08,Software Engineering I
+pKI420,4,2,0,L08,Software Engineering I Praktikum
+lKI430,4,4,41,L02,Natural Language Processing
+pKI430,4,2,0,L02-L01,Natural Language Processing Praktikum
+lKI440,4,4,42,L03,Machine Learning II
+pKI440,4,2,0,L03-L01-L02,Machine Learning II Praktikum
+lKI450,4,2,30,L01,Künstliche Intelligenz II
+pKI450,4,2,0,L01,Künstliche Intelligenz II Praktikum
+lKI610,6,2,47,L07,Big Data Algorithms
+pKI610,6,2,0,L07,Big Data Algorithms Praktikum
+lKI620,6,2,33,L02,Machine Learning III
+pKI620,6,2,0,L02-L03-L01,Machine Learning III Praktikum

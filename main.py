@@ -8,8 +8,6 @@
 # day = monday, etc.
 # lecturer[day] = 1010111010, etc.
 
-
-
 import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
@@ -26,46 +24,65 @@ from utils.table_printer import TablePrinter
 #TODO[ ]: if necessary, add gender, etc. to lecturers for german spelling and other information
 #TODO[ ]: implement print function in different languages
 
+#HEURISTIC[ ]: for each module, Optimise: same room (same room -OR- constraint modules are always same room)
 #HEURISTIC[ ]: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
 #HEURISTIC[ ]: for each semester for each day, Optimise: same room for as long as possible
 #HEURISTIC[ ]: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance -OR- constraint courses have specific buildings)
 
 def run_model():
+    
+    # Read in data fil
     lecturers_df = pd.read_csv("db/lecturers.csv", dtype=str)
-    modules_df = pd.read_csv("db/modules_no_p.csv", dtype=str)
+    modules_df = pd.read_csv("db/modules.csv", dtype=str)
     rooms_df = pd.read_csv("db/rooms.csv", dtype=str)
 
+    # Pandas data frame to dictionary
     lecturers_data = lecturers_df.to_dict(orient="records")
     modules_data = modules_df.to_dict(orient="records")
     rooms_data = rooms_df.to_dict(orient="records")
 
+    # Better names
     lecturers = lecturers_data
     modules = modules_data
     rooms = rooms_data
     
-    lecturer_ids = [dct["lecturer_id"] for dct in lecturers_data]
-    module_ids = [dct["module_id"] for dct in modules_data]
-    room_ids = [dct["room_id"] for dct in rooms_data]
+    # Generate praktika
+    for module_p in modules:
+        if module_p["module_id"][0] == "p":
+            for module_l in modules:
+                if module_l["module_id"][0] == "l" and module_p["module_id"][1:] == module_l["module_id"][1:]:
+                    numof_prak = (int(module_l["participants"]) // 20) + 1
+                    remaining_participants = int(module_l["participants"])
+                    for num in range(numof_prak):
+                        module_p_copy = module_p.copy()
+                        module_p_copy["module_id"] = module_p_copy["module_id"] + str(num+1)
+                        
+                        participants = remaining_participants // numof_prak
+                        module_p_copy["participants"] = str(participants)
+                        remaining_participants -= participants
+                        numof_prak -= 1
+                        modules.append(module_p_copy)
+                    
+                    modules.remove(module_p)
     
+    # Create id dictionary
+    lecturer_ids = [lecturer["lecturer_id"] for lecturer in lecturers]
+    module_ids = [module["module_id"] for module in modules]
+    room_ids = [room["room_id"] for room in rooms]
+    
+    # Create other data sources
     semesters = list(set([dct["semester"] for dct in modules_data]))
     semesters.sort()
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
     time_slots = range(10)
 
-    lecturers_num = range(len(lecturers_data))
-    modules_num = range(len(modules_data))
-    lecturer_ids_num = range(len(lecturer_ids))
-    module_ids_num = range(len(module_ids))
-    semesters_num = range(len(semesters))
-    days_num = range(len(days))
-
+    # Link ids to int values
     lecturer_ids_dic = {lecturer_id: num for num, lecturer_id in enumerate(lecturer_ids)}
     module_ids_dic = {module_id: num for num, module_id in enumerate(module_ids)}
     room_ids_dic = {room_id: num for num, room_id in enumerate(room_ids)}
     semesters_dic = {semester: num for num, semester in enumerate(semesters)}
     days_dic = {day: num for num, day in enumerate(days)}
     days_uniform_dic = {day: day[:3] for day in days}
-    
     
     
 
@@ -85,7 +102,7 @@ def run_model():
     print(len(timetable))
 
     # Define the constraints
-    # Implied for every lecturer for every time_slot that time_slot bit == "1" | Lecturers only give lectures when they are free (bit == "1")
+    # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -96,7 +113,7 @@ def run_model():
                                 bit == "1"
                                 )
 
-    # Implied for every module that module["lecturer_id"] == lecturer["lecturer_id"]
+    # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -104,7 +121,7 @@ def run_model():
                     for time_slot in time_slots:
                         for room in rooms:
                             model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
-                                module["lecturer_id"] == lecturer["lecturer_id"]
+                                lecturer["lecturer_id"] in module["lecturer_id"]
                                 )
 
     # Implied for every module that semester == module["semester"]
@@ -129,7 +146,18 @@ def run_model():
                                 room["capacity"] >= module["participants"]
                                 )
 
-    # At most one room per module per time_slot | Every room and time_slot only gets one module
+    # Implied for every room that module["module_id"][0] == room["room_type"]
+    for lecturer in lecturers:
+        for module in modules:
+            for semester in semesters:
+                for day in days:
+                    for time_slot in time_slots:
+                        for room in rooms:
+                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                                module["module_id"][0] == room["room_type"]
+                                )
+
+    # At most one room per module per time_slot | for each time_slot two modules cannot be scheduled in the same room
     for day in days:
         for time_slot in time_slots:
             for room in rooms:
@@ -139,7 +167,7 @@ def run_model():
                 for semester in semesters
                 )
 
-    # At most one module per lecturer per time_slot | A lecturer cannot be scheduled for two modules at the same time
+    # At most one module per lecturer per time_slot | a lecturer cannot be scheduled for two modules at the same time
     for lecturer in lecturers:
         for day in days:
             for time_slot in time_slots:
@@ -149,7 +177,7 @@ def run_model():
                 for room in rooms
                 )
 
-    # At most one module per semester per time_slot
+    # At most one module per semester per time_slot | for each semester two modules cannot be scheduled at the same time
     for semester in semesters:
         for day in days:
             for time_slot in time_slots:
@@ -167,12 +195,14 @@ def run_model():
             for day in days
             for time_slot in time_slots
             for room in rooms
-        ]) == int(module["sws"]) * 2)
+        ]) == int(module["sws"]))
+
+
 
     # Solve the model
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
-    print( f"Status:{solver.StatusName()}",f"Bools:{solver.NumBooleans()}", f"Branches:{solver.NumBranches()}", f"Conflicts:{solver.NumConflicts()}", sep="\n", end="\n\n")
+    print( f'Status:{solver.StatusName()}',f'Bools:{solver.NumBooleans()}', f'Branches:{solver.NumBranches()}', f'Conflicts:{solver.NumConflicts()}', sep='\n', end='\n\n')
     solution = {}
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
@@ -204,7 +234,8 @@ def run_model():
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
                                     solution[semester][day][time_slot].append([module["module_id"], lecturer["lecturer_id"]])
                                     print(
-                                        f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
+                                        f'{time_slot} {module["module_id"]:7} {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) {lecturer["lecturer_name"]}'
+                                        #f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
                                         #f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
                                     )
                     
@@ -217,7 +248,7 @@ def run_model():
             for day in days:
                 del solution[semester][day]
 
-        pprint.pprint(solution)
+        #pprint.pprint(solution)
         return solution
     else:
         print("No feasible solution found.")
@@ -236,7 +267,7 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
         else:
             n_a_r_l_dic[elem] = 1
     return n_a_r_l_dic
-    
+
 
 gld.create_data()
 gmd.create_data()
