@@ -222,10 +222,13 @@ def run_model():
     solution = {}
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        
+        # Create available_rooms_dic to check how many rooms are free for each time_slot
         available_rooms_dic = {(day, time_slot): [room_id for room_id in room_ids]
                                for day in days
                                for time_slot in time_slots
                                }
+        
         for semester in semesters:
             print()
             solution.update({semester:{}})
@@ -234,7 +237,7 @@ def run_model():
                 print(f'{day}:')
                 solution[semester].update({day:{}})
                 for time_slot in time_slots:
-                    solution[semester][day].update({time_slot:{lecturer["lecturer_id"]: lecturer, module["module_id"]: module, room["room_id"]: room}}) # @niklas Why not another dictionary with keys as id's from the variables from the for loops below and values as the variable itself (timeslot:{lecturer_id: lecturer, module_id: module, room_id: room})?
+                    solution[semester][day].update({time_slot:{}}) # @niklas Why not another dictionary with keys as id's from the variables from the for loops below and values as the variable itself (timeslot:{lecturer_id: lecturer, module_id: module, room_id: room})?
                     for lecturer in lecturers:
                         for module in modules:
                             for room in rooms:
@@ -250,7 +253,11 @@ def run_model():
                                     module_id_nicer = module["module_id"][1:] + module["module_id"][0]
                                     
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
-                                    solution[semester][day][time_slot].append([module["module_id"], lecturer["lecturer_id"]])
+                                    
+                                    solution[semester][day][time_slot][lecturer["lecturer_id"]] = lecturer
+                                    solution[semester][day][time_slot][module["module_id"]] = module
+                                    solution[semester][day][time_slot][room["room_id"]] = room
+                                    
                                     print(
                                         f'{time_slot} {module_id_nicer:7} {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) {lecturer["lecturer_name"]}'
                                         #f'At time slot {time_slot} {module_id_nicer} is being taught in room {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
@@ -258,6 +265,7 @@ def run_model():
                                     )
                     
         print(numof_available_rooms(available_rooms_dic, days, time_slots))
+        
         print([(module["module_id"], module["participants"]) for module in modules])
         for semester in semesters:
             for day in days:
