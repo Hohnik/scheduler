@@ -72,15 +72,15 @@ obj = {
             'monday': {
                 0: {
                     "lecturer": {
-                        "id": "001",
-                        "name": "Osendorfer"
+                        "lecturer_id": "001",
+                        "lecturer_name": "Osendorfer"
                     }, 
                     "module": {
-                        "id": "KI210",
-                        "name": "Programmieren I"
+                        "module_id": "lKI210",
+                        "module_name": "Programmieren I"
                     }, 
                     "room": {
-                        "id": "G005",
+                        "room_id": "G005",
                     }
                 },
                 1: {
