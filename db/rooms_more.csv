@@ -1,4 +1,4 @@
-room_id,capacity,is_practice_room
+room_id,capacity,room_type
 G001,60,l
 G002,60,l
 G003,60,l

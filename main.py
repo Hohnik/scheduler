@@ -63,7 +63,7 @@ def run_model():
                     remaining_participants = int(module_l["participants"])
                     for num in range(numof_prak):
                         module_p_copy = module_p.copy()
-                        module_p_copy["module_id"] = module_p_copy["module_id"] + str(num+1)
+                        module_p_copy["module_id"] = module_p_copy["module_id"] + '_' + str(num+1)
                         
                         participants = remaining_participants // numof_prak
                         module_p_copy["participants"] = str(participants)
@@ -82,7 +82,10 @@ def run_model():
     semesters = list(set([module["semester"] for module in modules]))
     semesters.sort()
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-    time_slots = range(10)
+    time_slots = range(len(lecturers[0][days[0]]))
+    #print(len(lecturers[0][days[0]]))
+    
+    time_slot_times = ["8:45-9:30","9:30-10:15","10:15-11:00","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
 
     # Link ids to int values
     lecturer_ids_dic = {lecturer_id: num for num, lecturer_id in enumerate(lecturer_ids)}
@@ -91,6 +94,7 @@ def run_model():
     semesters_dic = {semester: num for num, semester in enumerate(semesters)}
     days_dic = {day: num for num, day in enumerate(days)}
     days_uniform_dic = {day: day[:3] for day in days}
+    time_slot_times_dic = {time_slot_time:time_slot for time_slot, time_slot_time in zip(time_slots, time_slot_times) if time_slot < len(time_slots)}
     
     # Add course to module dictionary
     for module in modules:
@@ -230,7 +234,7 @@ def run_model():
                 print(f'{day}:')
                 solution[semester].update({day:{}})
                 for time_slot in time_slots:
-                    solution[semester][day].update({time_slot:[]}) # @niklas Why not another dictionary with keys as id's from the variables from the for loops below and values as the variable itself (timeslot:{lecturer_id: lecturer, module_id: module, room_id: room})?
+                    solution[semester][day].update({time_slot:{lecturer["lecturer_id"]: lecturer, module["module_id"]: module, room["room_id"]: room}}) # @niklas Why not another dictionary with keys as id's from the variables from the for loops below and values as the variable itself (timeslot:{lecturer_id: lecturer, module_id: module, room_id: room})?
                     for lecturer in lecturers:
                         for module in modules:
                             for room in rooms:
@@ -242,13 +246,15 @@ def run_model():
                                         days_dic[day], 
                                         time_slot, 
                                         room_ids_dic[room["room_id"]])]):
-
+                                    
+                                    module_id_nicer = module["module_id"][1:] + module["module_id"][0]
+                                    
                                     available_rooms_dic[(day, time_slot)].remove(room["room_id"])
                                     solution[semester][day][time_slot].append([module["module_id"], lecturer["lecturer_id"]])
                                     print(
-                                        f'{time_slot} {module["module_id"]:7} {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) {lecturer["lecturer_name"]}'
-                                        #f'At time slot {time_slot} {module["module_id"]} is being taught in room {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
-                                        #f'An Zeitpunkt {time_slot} wird {module["module_id"]} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
+                                        f'{time_slot} {module_id_nicer:7} {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) {lecturer["lecturer_name"]}'
+                                        #f'At time slot {time_slot} {module_id_nicer} is being taught in room {room["room_id"]} ({module["module_id"][0]}={room["room_type"]}) ({module["participants"]}/{room["capacity"]}) by Lecturer {lecturer["lecturer_name"]}'
+                                        #f'An Zeitpunkt {time_slot} wird {module_id_nicer} unterrichtet in Raum {room["room_id"]} ({module["participants"]}/{room["capacity"]}) von Professor {lecturer["lecturer_name"]}'
                                     )
                     
         print(numof_available_rooms(available_rooms_dic, days, time_slots))
