@@ -85,7 +85,7 @@ def run_model():
     time_slots = range(len(lecturers[0][days[0]]))
     #print(len(lecturers[0][days[0]]))
     
-    time_slot_times = ["8:45-9:30","9:30-10:15","10:15-11:00","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
+    time_slot_times = ["8:45-9:30","9:30-10:15","10:30-11:15","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
 
     # Link ids to int values
     lecturer_ids_dic = {lecturer_id: num for num, lecturer_id in enumerate(lecturer_ids)}
@@ -118,60 +118,70 @@ def run_model():
     print(len(timetable))
 
     # Define the constraints
-    # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
                 for day in days:
                     for time_slot, bit in enumerate(lecturer[day]):
                         for room in rooms:
+                            
+                            # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
                             model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
                                 bit == "1"
                                 )
 
-    # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
-    for lecturer in lecturers:
-        for module in modules:
-            for semester in semesters:
-                for day in days:
-                    for time_slot in time_slots:
-                        for room in rooms:
+                            # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
                             model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
                                 lecturer["lecturer_id"] in module["lecturer_id"]
                                 )
-
-    # Implied for every module that semester == module["semester"] | modules linked to respective semesters
-    for lecturer in lecturers:
-        for module in modules:
-            for semester in semesters:
-                for day in days:
-                    for time_slot in time_slots:
-                        for room in rooms:
+                        
+                            # Implied for every module that semester == module["semester"] | modules linked to respective semesters
                             model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
                                 semester == module["semester"]
                                 )
 
-    # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
-    for lecturer in lecturers:
-        for module in modules:
-            for semester in semesters:
-                for day in days:
-                    for time_slot in time_slots:
-                        for room in rooms:
+                            # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
                             model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
                                 room["capacity"] >= module["participants"]
                                 )
 
-    # Implied for every room that module["module_id"][0] == room["room_type"] | room type fits to module type
+                            # Implied for every room that module["module_id"][0] == room["room_type"] | room type fits to module type
+                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                                module["module_id"][0] == room["room_type"]
+                                )
+
+    # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws == 3: 3, elif leftover_sws == 1: 1 else: leftover_sws -= 2: 2)
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
                 for day in days:
                     for time_slot in time_slots:
                         for room in rooms:
-                            model.AddImplication(timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
-                                module["module_id"][0] == room["room_type"]
-                                )
+                            l = lecturer_ids_dic[lecturer["lecturer_id"]]
+                            m = module_ids_dic[module["module_id"]]
+                            s = semesters_dic[semester], days_dic[day]
+                            t = time_slot
+                            r = room_ids_dic[room["room_id"]]
+                            
+                            if leftover_sws == 0:
+                                0
+                                # break
+                            elif leftover_sws == 3:
+                                leftover_sws -= 3
+                                3
+                            elif leftover_sws == 1:
+                                leftover_sws -= 1
+                                1
+                            else:
+                                leftover_sws -= 2
+                                2
+
+                            model.AddImplication(timetable[(l, m, s, t, r)], timetable[(l, m, s, t+1, r)])
+                            model.AddImplication(timetable[(l, m, s, t+1, r)], timetable[(l, m, s, t+2, r)])
+                            model.AddImplication(timetable[(l, m, s, t+2, r)], timetable[(l, m, s, t+3, r)])
+                            
+
+
 
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     for day in days:
