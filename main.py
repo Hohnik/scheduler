@@ -235,12 +235,13 @@ def run_model():
 
 
     # Solve the model
+    solution = {}
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
     print(solver.SolutionInfo())
-    
     print( f'Status:{solver.StatusName()}',f'Bools:{solver.NumBooleans()}', f'Branches:{solver.NumBranches()}', f'Conflicts:{solver.NumConflicts()}', sep='\n', end='\n\n')
-    solution = {}
+
+
     # Retrieve the solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         
