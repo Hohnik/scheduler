@@ -1,30 +1,20 @@
 import pprint
 
 def main():
-    obj = {
-        'KI2': {
-            'monday': {
+    data = {
+        "KI2": {
+            "monday": {
                 0: {
-                    "lecturer": {
-                        "lecturer_id": "001",
-                        "lecturer_name": "Osendorfer"
-                    }, 
-                    "module": {
-                        "module_id": "lKI210",
-                        "module_name": "Programmieren I"
-                    }, 
-                    "room": {
-                        "room_id": "G005",
-                    }
-                },
-                1: {
+                    "lecturer": {"lecturer_id": "001", "lecturer_name": "Osendorfer"},
+                    "module": {"module_id": "lKI210", "module_name": "Programmieren I"},
+                    "room": {"room_id": "G005"},
                 },
             },
         }
     }
 
     print("Here a little test table:")
-    printer = TablePrinter(obj)
+    printer = TablePrinter(data)
     printer.print_semester_tables(end="The print_tables method can be used like a normal print")
 
 class TablePrinter():
@@ -37,10 +27,18 @@ class TablePrinter():
         self.line_bot = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
 
     def print_semester_tables(self, *args, **kwargs):
-        for table_string in self.generate_table_strings():
+        for table_string in self.generate_semester_table_strings():
             print(table_string, *args, **kwargs)
 
-    def generate_table_strings(self):
+    def print_lecturer_tables(self, *args, **kwargs):
+        for table_string in self.generate_semester_table_strings():
+            print(table_string, *args, **kwargs)
+        pass
+
+    def generate_semester_table_strings(self):
+        return [self._generate_semester(semester) for semester in self.solution.keys()]
+
+    def generate_lecturer_table_strings(self):
         return [self._generate_semester(semester) for semester in self.solution.keys()]
 
     def _generate_semester(self, semester):
@@ -65,9 +63,7 @@ class TablePrinter():
     def _generate_body(self, semester):
         result = ""
 
-        
         for time_slot in range(self._calculate_max_slot() + 1):
-        # for time_slot in range(list(self.solution[list(self.solution.keys())[0]][[day for day in list(obj.values())[0]][0]].keys())[-1]+1):
             result += self.line
             result += f'|{time_slot+1:^{self.col_width //2}}|'
 
