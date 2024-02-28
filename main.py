@@ -305,7 +305,7 @@ def run_model():
     else:
         print(solver.SolutionInfo())
         print("No feasible solution found.")
-        gld.create_data()
+        gld.generate_data()
         gmd.create_data()
         run_model()
 
@@ -322,7 +322,7 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
     return n_a_r_l_dic
 
 
-gld.create_data()
+gld.generate_data()
 gmd.create_data()
 result_object = run_model()
 # pprint.pprint(result_object)
