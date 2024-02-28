@@ -1,3 +1,4 @@
+#TODO Update data structure to -> semester: { day: { time_slot: { lecturer: {}, module: {}, room: {}}}}
 class TablePrinter():
     days = ["mon", "tue", "wed", "thu", "fri"]
     def __init__(self, solution: dict[str, dict[str, dict[int, list]]]) -> None:
@@ -35,7 +36,7 @@ class TablePrinter():
 
     def _generate_body(self, semester):
         result = ""
-        for time_slot in range(10):
+        for time_slot in range(list(self.solution[list(self.solution.keys())[0]]["mon"].keys())[-1]+1):
             result += self.line
             result += f'|{time_slot:^{self.col_width //2}}|'
 
@@ -70,7 +71,7 @@ class TablePrinter():
 
 obj = {
         'KI2': {
-            'monday': {
+            'mon': {
                 0: {
                     "lecturer": {
                         "lecturer_id": "001",
