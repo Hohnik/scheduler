@@ -303,7 +303,7 @@ def run_model():
     else:
         print(solver.ResponseStats())
         print("No feasible solution found.")
-        gld.generate_data()
+        gld.write_generated_data()
         gmd.create_data()
         run_model()
 

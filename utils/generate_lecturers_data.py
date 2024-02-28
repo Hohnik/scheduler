@@ -7,6 +7,9 @@ def main():
     pprint.pprint(generate_data())
     write_data("db/lecturers.csv", generate_data())
 
+def write_generated_data():
+    write_data("db/lecturers.csv", generate_data())
+
 def write_data(path, data):
     pd.DataFrame(data).to_csv(path, index=False)
 
