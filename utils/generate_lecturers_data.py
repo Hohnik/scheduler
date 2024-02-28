@@ -47,7 +47,7 @@ def generate_data():
     return result_rows
 
 def generate_lecturers_data_empty():
-    names = ["Osendorfer", "Kromer", "Eisenreich", "Auer", "Ziegler", "Uhrmann", "Siebert", "Schröter", "Nazareth"]
+    names = ["Kromer", "Osendorfer", "Eisenreich", "Auer", "Ziegler", "Uhrmann", "Siebert", "Schröter", "Nazareth"]
     names_iter = iter(names)
 
     result_object = []

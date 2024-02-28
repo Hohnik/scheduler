@@ -166,31 +166,68 @@ def run_model():
     # 5  = [3+2]          [[3+2][2+2+1][3+1+1][2+1+1+1][1+1+1+1+1]]
     # 10 = [2+2+2+2+2]
     
-    for lecturer in lecturers:
-        for module in modules:
-            session_blocks = calculate_session_blocks(module["sws"])
-            for block_size in session_blocks:
-                for semester in semesters:
-                    for day in days:
-                        for time_slot in range(len(time_slots) - block_size + 1):  # Adjust based on block size
-                            for room in rooms:
-                                l = lecturer_ids_dic[lecturer["lecturer_id"]]
-                                m = module_ids_dic[module["module_id"]]
-                                s = semesters_dic[semester]
-                                d = days_dic[day]
-                                t = time_slot
-                                r = room_ids_dic[room["room_id"]]
+    for module in modules:
+        session_blocks = calculate_session_blocks(module["sws"])
+        for block_size in session_blocks:
+            if block_size == 2:
+                #print(block_size)
+                # slots = ((
+                #     timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                #     timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_ids_dic[room["room_id"]])]
+                #     )
+                #     for lecturer in lecturers
+                #     for semester in semesters
+                #     for day in days
+                #     for time_slot in range(len(time_slots) - block_size + 1)
+                #     for room in rooms
+                # )
+                #first_slot = slots[0]
+                #second_slot = slots[1]
+                
+                model.AddBoolOr((first_slot, second_slot) for first_slot, second_slot in (
+                    timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                    timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_ids_dic[room["room_id"]])]
+                
+                    for lecturer in lecturers
+                    for semester in semesters
+                    for day in days
+                    for time_slot in range(len(time_slots) - block_size + 1)
+                    for room in rooms)
+                ).OnlyEnforceIf([
+                    not timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
+                    not timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_ids_dic[room["room_id"]])]])
+            elif block_size == 3:
+                #print(block_size)
+                model.Add(cp_model.LinearExpr.Sum([start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )]]) == 3)
+                # model.AddBoolAnd(start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )])
+                ...
 
-                                start_block = timetable[((l, m, s, d, t, r))]
-                                #test = [1, 1]
-                                #lst = [timetable[(l, m, s, d, t+offset, r )] for offset in range(block_size)]
-                                if block_size == 2:
-                                    model.AddBoolAnd(start_block, timetable[(l, m, s, d, t+1, r )])
-                                elif block_size == 3:
-                                    model.AddBoolAnd(start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )])
-
-    def test():
-        return model.AddImplication(test)
+#    for lecturer in lecturers:
+#        for module in modules:
+#            session_blocks = calculate_session_blocks(module["sws"])
+#            for block_size in session_blocks:
+#                for semester in semesters:
+#                    for day in days:
+#                        for time_slot in range(len(time_slots) - block_size + 1):  # Adjust based on block size
+#                            for room in rooms:
+#                                l = lecturer_ids_dic[lecturer["lecturer_id"]]
+#                                m = module_ids_dic[module["module_id"]]
+#                                s = semesters_dic[semester]
+#                                d = days_dic[day]
+#                                t = time_slot
+#                                r = room_ids_dic[room["room_id"]]
+#
+#                                start_block = timetable[((l, m, s, d, t, r))]
+#                                #test = [1, 1]
+#                                #lst = [timetable[(l, m, s, d, t+offset, r )] for offset in range(block_size)]
+#                                if block_size == 2:
+#                                    #print(block_size)
+#                                    model.Add(cp_model.LinearExpr.Sum(start_block, timetable[(l, m, s, d, t+1, r )]) == 2)
+#                                elif block_size == 3:
+#                                    #print(block_size)
+#                                    model.Add(cp_model.LinearExpr.Sum(start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )]) == 3)
+#                                    # model.AddBoolAnd(start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )])
+#                                    ...
 
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     for day in days:
