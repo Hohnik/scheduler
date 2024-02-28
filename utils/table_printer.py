@@ -1,6 +1,34 @@
-#TODO Update data structure to -> semester: { day: { time_slot: { lecturer: {}, module: {}, room: {}}}}
+import pprint
+
+def main():
+    obj = {
+        'KI2': {
+            'monday': {
+                0: {
+                    "lecturer": {
+                        "lecturer_id": "001",
+                        "lecturer_name": "Osendorfer"
+                    }, 
+                    "module": {
+                        "module_id": "lKI210",
+                        "module_name": "Programmieren I"
+                    }, 
+                    "room": {
+                        "room_id": "G005",
+                    }
+                },
+                1: {
+                },
+            },
+        }
+    }
+
+    print("Here a little test table:")
+    printer = TablePrinter(obj)
+    printer.print_semester_tables(end="The print_tables method can be used like a normal print")
+
 class TablePrinter():
-    days = ["mon", "tue", "wed", "thu", "fri"]
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
     def __init__(self, solution: dict[str, dict[str, dict[int, list]]]) -> None:
         self.solution = solution
         self.col_width = self.calc_dynamic_col_width(solution)
@@ -8,7 +36,7 @@ class TablePrinter():
         self.line = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
         self.line_bot = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
 
-    def print_tables(self, *args, **kwargs):
+    def print_semester_tables(self, *args, **kwargs):
         for table_string in self.generate_table_strings():
             print(table_string, *args, **kwargs)
 
@@ -36,9 +64,12 @@ class TablePrinter():
 
     def _generate_body(self, semester):
         result = ""
-        for time_slot in range(list(self.solution[list(self.solution.keys())[0]]["mon"].keys())[-1]+1):
+
+        
+        for time_slot in range(self._calculate_max_slot() + 1):
+        # for time_slot in range(list(self.solution[list(self.solution.keys())[0]][[day for day in list(obj.values())[0]][0]].keys())[-1]+1):
             result += self.line
-            result += f'|{time_slot:^{self.col_width //2}}|'
+            result += f'|{time_slot+1:^{self.col_width //2}}|'
 
             fields = []
             for day in self.days:
@@ -69,30 +100,14 @@ class TablePrinter():
                         pass
         return max(words) + 3
 
-obj = {
-        'KI2': {
-            'mon': {
-                0: {
-                    "lecturer": {
-                        "lecturer_id": "001",
-                        "lecturer_name": "Osendorfer"
-                    }, 
-                    "module": {
-                        "module_id": "lKI210",
-                        "module_name": "Programmieren I"
-                    }, 
-                    "room": {
-                        "room_id": "G005",
-                    }
-                },
-                1: {
-                },
-            },
-        }
-    }
+    def _calculate_max_slot(self):
+        result = 0
+        for days in self.solution.values():
+            for time_slots in days.values():
+                current_max = list(time_slots.keys())[-1]
+                result =  max(current_max, result)
+        return result
 
 
 if __name__ == "__main__":
-    print("Here a little test table:")
-    printer = TablePrinter(obj)
-    printer.print_tables(end="The print_tables method can be used like a normal print")
+    main()
