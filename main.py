@@ -150,38 +150,52 @@ def run_model():
                                 module["module_id"][0] == room["room_type"]
                                 )
 
-#    # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws == 3: 3, elif leftover_sws == 1: 1 else: leftover_sws -= 2: 2)
-#    for lecturer in lecturers:
-#        for module in modules:
-#            for semester in semesters:
-#                for day in days:
-#                    for time_slot in time_slots:
-#                        for room in rooms:
-#                            l = lecturer_ids_dic[lecturer["lecturer_id"]]
-#                            m = module_ids_dic[module["module_id"]]
-#                            s = semesters_dic[semester], days_dic[day]
-#                            t = time_slot
-#                            r = room_ids_dic[room["room_id"]]
-#                            
-#                            if leftover_sws == 0:
-#                                0
-#                                # break
-#                            elif leftover_sws == 3:
-#                                leftover_sws -= 3
-#                                3
-#                            elif leftover_sws == 1:
-#                                leftover_sws -= 1
-#                                1
-#                            else:
-#                                leftover_sws -= 2
-#                                2
-#
-#                            model.AddImplication(timetable[(l, m, s, t, r)], timetable[(l, m, s, t+1, r)])
-#                            model.AddImplication(timetable[(l, m, s, t+1, r)], timetable[(l, m, s, t+2, r)])
-#                            model.AddImplication(timetable[(l, m, s, t+2, r)], timetable[(l, m, s, t+3, r)])
-                            
+    # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws == 3: 3, elif leftover_sws == 1: 1 else: leftover_sws -= 2: 2)    
+    def calculate_session_blocks(leftover_sws:str):
+        #return [1]
+        session_blocks = []
+        leftover_sws = int(leftover_sws)
+        while leftover_sws > 0:
+            if leftover_sws % 2 == 0:
+                leftover_sws -= 2
+                session_blocks.append(2)
+            elif leftover_sws >= 3:
+                leftover_sws -= 3
+                session_blocks.append(3)
+            elif leftover_sws == 1:
+                leftover_sws -= 1
+                session_blocks.append(1)
+        
+        return session_blocks
 
+    # 5  = [3+2]          [[3+2][2+2+1][3+1+1][2+1+1+1][1+1+1+1+1]]
+    # 10 = [2+2+2+2+2]
 
+    for lecturer in lecturers:
+        for module in modules:
+            session_blocks = calculate_session_blocks(module["sws"])
+            for block_size in session_blocks:
+                for semester in semesters:
+                    for day in days:
+                        for time_slot in range(len(time_slots) - block_size + 1):  # Adjust based on block size
+                            for room in rooms:
+                                l = lecturer_ids_dic[lecturer["lecturer_id"]]
+                                m = module_ids_dic[module["module_id"]]
+                                s = semesters_dic[semester]
+                                d = days_dic[day]
+                                t = time_slot
+                                r = room_ids_dic[room["room_id"]]
+
+                                start_block = timetable[((l, m, s, d, t, r))]
+                                #test = [1, 1]
+                                #lst = [timetable[(l, m, s, d, t+offset, r )] for offset in range(block_size)]
+                                if block_size == 2:
+                                    model.AddBoolAnd(start_block, timetable[(l, m, s, d, t+1, r )])
+                                elif block_size == 3:
+                                    model.AddBoolAnd(start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )])
+
+    def test():
+        return model.AddImplication(test)
 
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     for day in days:
@@ -289,6 +303,7 @@ def run_model():
         #pprint.pprint(solution)
         return solution
     else:
+        print(solver.SolutionInfo())
         print("No feasible solution found.")
         gld.create_data()
         gmd.create_data()

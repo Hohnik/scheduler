@@ -46,7 +46,7 @@ def create_data():
 
             lecturer[day] = str_bit
 
-        lecturer[random.choice(days)] = "0000000000"
+        lecturer[random.choice(days)] = "0" * 10
 
         lecturers_data_randomized.append(lecturer)
 
