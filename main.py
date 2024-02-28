@@ -301,7 +301,7 @@ def run_model():
         #pprint.pprint(solution)
         return solution
     else:
-        print(solver.SolutionInfo())
+        print(solver.ResponseStats())
         print("No feasible solution found.")
         gld.generate_data()
         gmd.create_data()
