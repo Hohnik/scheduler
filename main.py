@@ -165,7 +165,7 @@ def run_model():
 
     # 5  = [3+2]          [[3+2][2+2+1][3+1+1][2+1+1+1][1+1+1+1+1]]
     # 10 = [2+2+2+2+2]
-    # test
+    
     for lecturer in lecturers:
         for module in modules:
             session_blocks = calculate_session_blocks(module["sws"])
