@@ -238,7 +238,6 @@ def run_model():
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
     print(solver.SolutionInfo())
-    print(solver.SearchForAllSolutions(model))
     
     print( f'Status:{solver.StatusName()}',f'Bools:{solver.NumBooleans()}', f'Branches:{solver.NumBranches()}', f'Conflicts:{solver.NumConflicts()}', sep='\n', end='\n\n')
     solution = {}
