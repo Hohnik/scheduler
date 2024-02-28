@@ -1,13 +1,5 @@
 # by Niklas Hohn & Julien Sauter
 
-# course = KI(unknown), etc.
-# module = KI210l(dic), etc.
-# lecturer = L01(dic), etc.
-# room = G005(dic), etc.
-# semester = 1, etc.
-# day = monday, etc.
-# lecturer[day] = 1010111010, etc.
-
 import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
@@ -16,26 +8,29 @@ import utils.generate_lecturers_data as gld
 import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
 
-#INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
+# INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused
 
+# TODO IMPORTANT: time_slots are currently treated as 60 minute windows, even though they are 45 min. This drastically changes how we have to check if sws per module are being taught. >= won't be enough because we don't want to overbook modules.
 
-#TODO[ ] IMPORTANT: fix solution object: see table_printer.py for example object
-#TODO[ ] IMPORTANT: time_slots are currently treated as 60 minute windows, even though they are 45 min. This drastically changes how we have to check if sws per module are being taught. >= won't be enough because we don't want to overbook modules.
+# TODO tidy up code, create classes and methods, OOP
+# TODO for performance try to merge contraints into one for loop struct (save previous for loop values)
+# TODO if necessary, add gender, etc. to lecturers for german spelling and other information
+# TODO implement print function (or equivalent/analogous output) in different languages
+# TODO MAYBE: Let courses define more accurately what they need in a room, instead of just lecture vs practice
 
+# HEURISTIC for each module, Optimise: same room (same room -OR- constraint modules are always same room)
+# HEURISTIC for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
+# HEURISTIC for each semester for each day, Optimise: same room for as long as possible
+# HEURISTIC for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance -OR- constraint courses have specific buildings)
+# HEURISTIC for each module for each room, Optimise: just over half full rooms (normal distribution, slightly right-skewed)
 
+def main():
+    gld.generate_data()
+    gmd.create_data()
+    result_object = run_model()
+    printer = TablePrinter(result_object)
+    printer.print_tables()
 
-#TODO[x] remove sws_pu and participants_lu from modules.csv file and create new modules instead
-#TODO[ ] tidy up code, create classes and methods, OOP
-#TODO[ ] for performance try to merge contraints into one for loop struct (save previous for loop values)
-#TODO[ ] if necessary, add gender, etc. to lecturers for german spelling and other information
-#TODO[ ] implement print function (or equivalent/analogous output) in different languages
-#TODO[ ] MAYBE: Let courses define more accurately what they need in a room, instead of just lecture vs practice
-
-#HEURISTIC[ ]: for each module, Optimise: same room (same room -OR- constraint modules are always same room)
-#HEURISTIC[ ]: for each lecturer, Optimise: less days -OR- shorter periods -OR- more breaks
-#HEURISTIC[ ]: for each semester for each day, Optimise: same room for as long as possible
-#HEURISTIC[ ]: for each semester for each day, Optimise: lower walking distance (add Mensa as room for break time) (same building -OR- room_coordinates with manhattan/euclidean distance -OR- constraint courses have specific buildings)
-#HEURISTIC[ ]: for each module for each room, Optimise: just over half full rooms (normal distribution, slightly right-skewed)
 
 def run_model():
     
@@ -228,6 +223,9 @@ def run_model():
     # Solve the model
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
+    print(solver.SolutionInfo())
+    print(solver.SearchForAllSolutions(model))
+    
     print( f'Status:{solver.StatusName()}',f'Bools:{solver.NumBooleans()}', f'Branches:{solver.NumBranches()}', f'Conflicts:{solver.NumConflicts()}', sep='\n', end='\n\n')
     solution = {}
     # Retrieve the solution
@@ -306,10 +304,5 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
             n_a_r_l_dic[elem] = 1
     return n_a_r_l_dic
 
-
-gld.generate_data()
-gmd.create_data()
-result_object = run_model()
-# pprint.pprint(result_object)
-printer = TablePrinter(result_object)
-printer.print_tables()
+if __name__ == "__main__":
+    main()
