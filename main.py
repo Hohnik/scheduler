@@ -30,8 +30,9 @@ def main():
     gld.generate_data()
     gmd.create_data()
     result_object = run_model()
-    printer = TablePrinter(result_object)
-    printer.print_semester_tables()
+    if result_object:
+        printer = TablePrinter(result_object)
+        printer.print_semester_tables()
 
 
 def run_model():
@@ -98,29 +99,7 @@ def run_model():
     room_idx  = data_idx["rooms"]
 
 
-    def generate_vars(model, data, data_idx):
-        vars = {}
-        for lecturer in data["lecturers"]:
-            for module in data["modules"]:
-                for semester in data["semesters"]:
-                    for day in data["days"]:
-                        for time_slot in data["time_slots"]:
-                            for room in data["rooms"]:
-                                vars[
-                                    (
-                                        data_idx["lecturers"][lecturer["lecturer_id"]],
-                                        data_idx["modules"][module["module_id"]],
-                                        data_idx["semesters"][semester],
-                                        data_idx["days"][day],
-                                        time_slot,
-                                        data_idx["rooms"][room["room_id"]],
-                                    )
-                                ] = model.NewBoolVar(
-                                    f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{room["room_id"]}'
-                                )
-
-        print("Variables: ", len(vars))
-        return vars
+    
 
     # Add course to module dictionary
     # TODO string slicing is kinda wanky :D regex?
@@ -181,38 +160,38 @@ def run_model():
 
         return session_blocks
 
-    # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws % 2 == 0: block_size = 2, elif leftover_sws >= 3: block_size = 3, elif leftover_sws == 1: block_size = 1 else: )
-    for lecturer in lecturers:
-        #print(lecturer["lecturer_id"])
-        for module in modules:
-            session_blocks = calculate_session_blocks(module["sws"])
-            for block_size in session_blocks:
-                for semester in semesters:
-                    if semester == module["semester"]:
-                        for day in days:
-                            for time_slot, bit in range(time_slots):  # Adjust based on block size
-                                if time_slot < len(lecturer[day]) - block_size + 1:
-                                    for room in rooms:
+    # # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws % 2 == 0: block_size = 2, elif leftover_sws >= 3: block_size = 3, elif leftover_sws == 1: block_size = 1 else: )
+    # for lecturer in lecturers:
+    #     #print(lecturer["lecturer_id"])
+    #     for module in modules:
+    #         session_blocks = calculate_session_blocks(module["sws"])
+    #         for block_size in session_blocks:
+    #             for semester in semesters:
+    #                 if semester == module["semester"]:
+    #                     for day in days:
+    #                         for time_slot, bit in enumerate(time_slots):  # Adjust based on block size
+    #                             if time_slot < len(lecturer[day]) - block_size + 1:
+    #                                 for room in rooms:
                                         
-                                        l = lecturer_idx["lecturer_id"]]
-                                        m = module_idx[module["module_id"]]
-                                        s = semester_idx[semester]
-                                        d = day_idx[day]
-                                        t = time_slot
-                                        r = room_idx[room["room_id"]]
+    #                                     l = lecturer_idx[lecturer["lecturer_id"]]
+    #                                     m = module_idx[module["module_id"]]
+    #                                     s = semester_idx[semester]
+    #                                     d = day_idx[day]
+    #                                     t = time_slot
+    #                                     r = room_idx[room["room_id"]]
                                         
-                                        block_bool_vars:list[IntVar] = [timetable[(l, m, s, d, t+offset, r)] for offset in range(block_size)]
+    #                                     block_bool_vars:list[IntVar] = [timetable[(l, m, s, d, t+offset, r)] for offset in range(block_size)]
 
-                                        for offset in range(1, block_size):
-                                            if lecturer[day][time_slot+offset] == "0":
-                                                for var in block_bool_vars:
-                                                    model.Add(var == 0)  # If lecturer is not available, block cannot be scheduled
+    #                                     for offset in range(1, block_size):
+    #                                         if lecturer[day][time_slot+offset] == "0":
+    #                                             for var in block_bool_vars:
+    #                                                 model.Add(var == 0)  # If lecturer is not available, block cannot be scheduled
                                                                                 
-                                        model.Add(sum(block_bool_vars) == block_size).OnlyEnforceIf(block_bool_vars)
+    #                                     model.Add(sum(block_bool_vars) == block_size).OnlyEnforceIf(block_bool_vars)
 
-                                else:
-                                    for offset in range(block_size):
-                                        model.AddHint(timetable[(l, m, s, d, t, r)])
+    #                             else:
+    #                                 for offset in range(block_size):
+    #                                     model.AddHint(timetable[(l, m, s, d, t, r)], True)
 
 #region
     # # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws % 2 == 0: block_size = 2, elif leftover_sws >= 3: block_size = 3, elif leftover_sws == 1: block_size = 1 else: )
@@ -443,14 +422,37 @@ def run_model():
         print("RoomsAvailable: ", numof_available_rooms(available_rooms_dic, days, time_slots))
         return solution
     else:
-        print(solver.ResponseStats())
+        # print(solver.ResponseStats())
         print("No feasible solution found.")
-        return {}
+        return None
 
 
 def read_data_from(path) -> dict:
     return pd.read_csv(path, dtype=str).to_dict(orient="records")
 
+def generate_vars(model, data, data_idx):
+        vars = {}
+        for lecturer in data["lecturers"]:
+            for module in data["modules"]:
+                for semester in data["semesters"]:
+                    for day in data["days"]:
+                        for time_slot in data["time_slots"]:
+                            for room in data["rooms"]:
+                                vars[
+                                    (
+                                        data_idx["lecturers"][lecturer["lecturer_id"]],
+                                        data_idx["modules"][module["module_id"]],
+                                        data_idx["semesters"][semester],
+                                        data_idx["days"][day],
+                                        time_slot,
+                                        data_idx["rooms"][room["room_id"]],
+                                    )
+                                ] = model.NewBoolVar(
+                                    f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{room["room_id"]}'
+                                )
+
+        print("Variables: ", len(vars))
+        return vars
 
 # number of available rooms per time_slot
 def numof_available_rooms(available_rooms_dic, days, time_slots):
