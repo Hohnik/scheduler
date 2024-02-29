@@ -32,6 +32,7 @@ def main():
     result_object = run_model()
     if result_object:
         printer = TablePrinter(result_object)
+        pprint.pprint(result_object)
         printer.print_semester_tables()
 
 
@@ -43,23 +44,27 @@ def run_model():
 
     # Generate praktika
     # TODO What is this code doing? Can it be moved into a function? Does it just generate data or is it modifying data? @Julio
-    for module_p in modules:
-        if module_p["module_id"][0] == "p":
-            for module_l in modules:
-                if module_l["module_id"][0] == "l" and module_p["module_id"][1:] == module_l["module_id"][1:]:
-                    numof_prak = (int(module_l["participants"]) // 20) + 1
-                    remaining_participants = int(module_l["participants"])
-                    for num in range(numof_prak):
-                        module_p_copy = module_p.copy()
-                        module_p_copy["module_id"] = module_p_copy["module_id"] + '_' + str(num+1)
+    # def generate_praktika(modules):
+    for module in modules:
+        if module["module_id"][0] == "p":
+            module_p = module
+            for module in modules:
+                if module["module_id"][0] == "l":
+                    module_l = module
+                    if module_p["module_id"][1:] == module_l["module_id"][1:]:
+                        numof_prak = (int(module_l["participants"]) // int(module_p["max_participants"])) + 1 # 20 is an arbitrary max number of participants for each praktika
+                        remaining_participants = int(module_l["participants"])
+                        for module_p_num in range(numof_prak):
+                            module_p_copy = module_p.copy()
+                            module_p_copy["module_id"] = module_p_copy["module_id"] + '_' + str(module_p_num+1)
 
-                        participants = remaining_participants // numof_prak
-                        module_p_copy["participants"] = str(participants)
-                        remaining_participants -= participants
-                        numof_prak -= 1
-                        modules.append(module_p_copy)
+                            participants = remaining_participants // numof_prak
+                            module_p_copy["participants"] = str(participants)
+                            remaining_participants -= participants
+                            numof_prak -= 1
+                            modules.append(module_p_copy)
 
-                    modules.remove(module_p)
+                        modules.remove(module_p)
 
     # Create id dictionary
     lecturer_ids = [lecturer["lecturer_id"] for lecturer in lecturers]
@@ -68,12 +73,12 @@ def run_model():
 
     semesters = list(set([module["semester"] for module in modules]))
     semesters.sort()
-    days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    days = generate_days(lecturers)
+    
     time_slots = range(len(lecturers[0][days[0]]))
     # time_slot_times = ["8:45-9:30","9:30-10:15","10:30-11:15","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
 
     # Link ids to int values
-
 
     data = {
         "lecturers": lecturers,
@@ -84,7 +89,7 @@ def run_model():
         "rooms": rooms,
     }
 
-    data_idx = {
+    data_idx:dict[str, dict[str, int]] = {
         "lecturers":{lecturer_id: num for num, lecturer_id in enumerate(lecturer_ids)},
         "modules": {module_id: num for num, module_id in enumerate(module_ids)},
         "semesters": {semester: num for num, semester in enumerate(semesters)},
@@ -97,8 +102,6 @@ def run_model():
     semester_idx  = data_idx["semesters"]
     day_idx  = data_idx["days"]
     room_idx  = data_idx["rooms"]
-
-
     
 
     # Add course to module dictionary
@@ -160,6 +163,7 @@ def run_model():
 
         return session_blocks
 
+#region
     # # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws % 2 == 0: block_size = 2, elif leftover_sws >= 3: block_size = 3, elif leftover_sws == 1: block_size = 1 else: )
     # for lecturer in lecturers:
     #     #print(lecturer["lecturer_id"])
@@ -193,7 +197,7 @@ def run_model():
     #                                 for offset in range(block_size):
     #                                     model.AddHint(timetable[(l, m, s, d, t, r)], True)
 
-#region
+
     # # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws % 2 == 0: block_size = 2, elif leftover_sws >= 3: block_size = 3, elif leftover_sws == 1: block_size = 1 else: )
     # for lecturer in lecturers:
     #     #print(lecturer["lecturer_id"])
@@ -384,13 +388,16 @@ def run_model():
 
         # Create available_rooms_dic to check how many rooms are free for each time_slot
         available_rooms_dic = {(day, time_slot): [room_id for room_id in room_ids]
-                               for day in days
-                               for time_slot in time_slots
-                               }
+            for day in days
+            for time_slot in time_slots
+            }
 
         for semester in semesters:
+            solution.update({semester: {}})
             for day in days:
+                solution[semester].update({day: {}})
                 for time_slot in time_slots:
+                    solution[semester][day].update({time_slot: {}})
                     for lecturer in lecturers:
                         for module in modules:
                             for room in rooms:
@@ -403,21 +410,13 @@ def run_model():
                                         time_slot, 
                                         room_idx[room["room_id"]])]):
 
-                                    available_rooms_dic[(day, time_slot)].remove(room["room_id"])
-                                    solution.update(
-                                        {
-                                            semester: {
-                                                day: {
-                                                    time_slot: {
-                                                        "lecturer": lecturer,
-                                                        "module": module,
-                                                        "room": room,
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    )
+                                    solution[semester][day][time_slot].update({
+                                        "lecturer": lecturer,
+                                        "module": module,
+                                        "room": room,
+                                    })
 
+                                    available_rooms_dic[(day, time_slot)].remove(room["room_id"])
 
         print("RoomsAvailable: ", numof_available_rooms(available_rooms_dic, days, time_slots))
         return solution
@@ -427,7 +426,7 @@ def run_model():
         return None
 
 
-def read_data_from(path) -> dict:
+def read_data_from(path) -> list[dict]:
     return pd.read_csv(path, dtype=str).to_dict(orient="records")
 
 def generate_vars(model, data, data_idx):
@@ -453,6 +452,16 @@ def generate_vars(model, data, data_idx):
 
         print("Variables: ", len(vars))
         return vars
+def generate_days(lecturers):
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    result = []
+    for day in days:
+        try:
+            lecturers[0][day]
+            result.append(day)
+        except KeyError:
+            continue
+    return result
 
 # number of available rooms per time_slot
 def numof_available_rooms(available_rooms_dic, days, time_slots):
@@ -464,6 +473,18 @@ def numof_available_rooms(available_rooms_dic, days, time_slots):
         else:
             n_a_r_l_dic[elem] = 1
     return n_a_r_l_dic
+
+def is_practice(module):
+    if module["module_id"][0] == "p":
+        return True
+
+def is_module_lecturer(module, lecturer):
+    if module["lecturer_id"] == lecturer["lecturer_id"]:
+        return True
+    else:
+        return False
+
+
 
 if __name__ == "__main__":
     main()

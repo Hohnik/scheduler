@@ -20,6 +20,8 @@ def create_data():
     for module in modules_data:
         if module["module_id"][0] == "l":
             module["participants"] = random.choices([num for num in range(20,51)], [weight/sum([x for x in range(31)]) for weight in range(31)])[0]
+            module["max_participants"] = module["participants"]
+            #module["max_participants"] = random.choices([num for num in range(20,module["participants"])], [weights/sum([x for x in range(module["participants"]-20)]) for weights in range(module["participants"]-20)])[0]
             modules_data_randomized.append(module)
         else:
             module["participants"] = 0
