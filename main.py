@@ -103,11 +103,16 @@ def run_model():
     day_idx  = data_idx["days"]
     room_idx  = data_idx["rooms"]
     
-
     # Add course to module dictionary
     # TODO string slicing is kinda wanky :D regex?
     for module in modules:
         module["course"] = module["module_id"][1:3]
+
+    # Create available_rooms_dic to check how many rooms are free for each time_slot
+    available_rooms_dic = {(day, time_slot): [room_id for room_id in room_ids]
+        for day in days
+        for time_slot in time_slots
+        }
 
     # Create model
     model = cp_model.CpModel()
@@ -145,23 +150,6 @@ def run_model():
                             model.AddImplication(timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])],
                                 module["module_id"][0] == room["room_type"]
                                 )
-
-    def calculate_session_blocks(leftover_sws:str):
-        #return [1]
-        session_blocks = []
-        leftover_sws = int(leftover_sws)
-        while leftover_sws > 0:
-            if leftover_sws % 2 == 0:
-                leftover_sws -= 2
-                session_blocks.append(2)
-            elif leftover_sws >= 3:
-                leftover_sws -= 3
-                session_blocks.append(3)
-            elif leftover_sws == 1:
-                leftover_sws -= 1
-                session_blocks.append(1)
-
-        return session_blocks
 
 #region
     # # | All modules should be in blocks of consecutive time_slots if possible (if leftover_sws % 2 == 0: block_size = 2, elif leftover_sws >= 3: block_size = 3, elif leftover_sws == 1: block_size = 1 else: )
@@ -368,10 +356,12 @@ def run_model():
             for room in rooms
         ]) == int(module["sws"]))
 
+    solver, status = solve_model(model)
+    return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status)
 
 
-    # Solve the model
-    solution = {}
+
+def solve_model(model):
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
     print(solver.SolutionInfo())
@@ -382,16 +372,24 @@ def run_model():
         f"Conflicts:{solver.NumConflicts()}",
         sep="\n",
     )
+    return (solver, status)
+    #return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic)
+def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status):
+    lecturers = data["lecturers"]
+    modules = data["modules"]
+    semesters  = data["semesters"]
+    days  = data["days"]
+    time_slots  = data["time_slots"]
+    rooms  = data["rooms"]
+    
+    lecturer_idx = data_idx["lecturers"]
+    module_idx = data_idx["modules"]
+    semester_idx  = data_idx["semesters"]
+    day_idx  = data_idx["days"]
+    room_idx  = data_idx["rooms"]
 
-    # Retrieve the solution
+    solution = {}
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-
-        # Create available_rooms_dic to check how many rooms are free for each time_slot
-        available_rooms_dic = {(day, time_slot): [room_id for room_id in room_ids]
-            for day in days
-            for time_slot in time_slots
-            }
-
         for semester in semesters:
             solution.update({semester: {}})
             for day in days:
@@ -424,7 +422,6 @@ def run_model():
         # print(solver.ResponseStats())
         print("No feasible solution found.")
         return None
-
 
 def read_data_from(path) -> list[dict]:
     return pd.read_csv(path, dtype=str).to_dict(orient="records")
@@ -463,8 +460,25 @@ def generate_days(lecturers):
             continue
     return result
 
-# number of available rooms per time_slot
+def calculate_session_blocks(leftover_sws:str):
+    #return [1]
+    session_blocks = []
+    leftover_sws = int(leftover_sws)
+    while leftover_sws > 0:
+        if leftover_sws % 2 == 0:
+            leftover_sws -= 2
+            session_blocks.append(2)
+        elif leftover_sws >= 3:
+            leftover_sws -= 3
+            session_blocks.append(3)
+        elif leftover_sws == 1:
+            leftover_sws -= 1
+            session_blocks.append(1)
+
+    return session_blocks
+
 def numof_available_rooms(available_rooms_dic, days, time_slots):
+    '''number of available rooms per time_slot'''
     numof_available_rooms_lst = [len(available_rooms_dic[(day, time_slot)]) for day in days for time_slot in time_slots]
     n_a_r_l_dic = {}
     for elem in numof_available_rooms_lst:
