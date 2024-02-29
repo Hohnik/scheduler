@@ -194,12 +194,12 @@ def run_model():
                                 if time_slot < len(lecturer[day]) - block_size + 1:
                                     for room in rooms:
                                         
-                                        l = lecturer_ids_dic[lecturer["lecturer_id"]]
-                                        m = module_ids_dic[module["module_id"]]
-                                        s = semesters_dic[semester]
-                                        d = days_dic[day]
+                                        l = lecturer_idx["lecturer_id"]]
+                                        m = module_idx[module["module_id"]]
+                                        s = semester_idx[semester]
+                                        d = day_idx[day]
                                         t = time_slot
-                                        r = room_ids_dic[room["room_id"]]
+                                        r = room_idx[room["room_id"]]
                                         
                                         block_bool_vars:list[IntVar] = [timetable[(l, m, s, d, t+offset, r)] for offset in range(block_size)]
 
@@ -228,12 +228,12 @@ def run_model():
     #                             if time_slot < len(lecturer[day]) - block_size + 1:
     #                                 for room in rooms:
                                         
-    #                                     l = lecturer_ids_dic[lecturer["lecturer_id"]]
-    #                                     m = module_ids_dic[module["module_id"]]
+    #                                     l = lecturer_idx[lecturer["lecturer_id"]]
+    #                                     m = module_idx[module["module_id"]]
     #                                     s = semesters_dic[semester]
     #                                     d = days_dic[day]
     #                                     t = time_slot
-    #                                     r = room_ids_dic[room["room_id"]]
+    #                                     r = room_idx[room["room_id"]]
                                         
     #                                     block_bool_vars:list[IntVar] = [timetable[(l, m, s, d, t+offset, r)] for offset in range(block_size)]
 
@@ -270,8 +270,8 @@ def run_model():
     #         if block_size == 2:
     #             #print(block_size)
     #             # slots = ((
-    #             #     timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
-    #             #     timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_ids_dic[room["room_id"]])]
+    #             #     timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_idx[room["room_id"]])],
+    #             #     timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_idx[room["room_id"]])]
     #             #     )
     #             #     for lecturer in lecturers
     #             #     for semester in semesters
@@ -283,8 +283,8 @@ def run_model():
     #             #second_slot = slots[1]
 
     #             model.AddBoolOr((first_slot, second_slot) for first_slot, second_slot in (
-    #                 timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
-    #                 timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_ids_dic[room["room_id"]])]
+    #                 timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_idx[room["room_id"]])],
+    #                 timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_idx[room["room_id"]])]
 
     #                 for lecturer in lecturers
     #                 for semester in semesters
@@ -292,8 +292,8 @@ def run_model():
     #                 for time_slot in range(len(time_slots) - block_size + 1)
     #                 for room in rooms)
     #             ).OnlyEnforceIf([
-    #                 not timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_ids_dic[room["room_id"]])],
-    #                 not timetable[(lecturer_ids_dic[lecturer["lecturer_id"]], module_ids_dic[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_ids_dic[room["room_id"]])]])
+    #                 not timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot, room_idx[room["room_id"]])],
+    #                 not timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semesters_dic[semester], days_dic[day], time_slot+1, room_idx[room["room_id"]])]])
     #         elif block_size == 3:
     #             #print(block_size)
     #             model.Add(cp_model.LinearExpr.Sum([start_block, timetable[(l, m, s, d, t+1, r )], timetable[(l, m, s, d, t+2, r )]]) == 3)
@@ -308,12 +308,12 @@ def run_model():
 #                    for day in days:
 #                        for time_slot in range(len(time_slots) - block_size + 1):  # Adjust based on block size
 #                            for room in rooms:
-#                                l = lecturer_ids_dic[lecturer["lecturer_id"]]
-#                                m = module_ids_dic[module["module_id"]]
+#                                l = lecturer_idx[lecturer["lecturer_id"]]
+#                                m = module_idx[module["module_id"]]
 #                                s = semesters_dic[semester]
 #                                d = days_dic[day]
 #                                t = time_slot
-#                                r = room_ids_dic[room["room_id"]]
+#                                r = room_idx[room["room_id"]]
 #
 #                                start_block = timetable[((l, m, s, d, t, r))]
 #                                #test = [1, 1]
