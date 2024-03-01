@@ -7,7 +7,7 @@ from ortools.sat.python import cp_model
 import utils.generate_lecturers_data as gld
 import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
-from utils.util import modify_modules_data, read_data_from, generate_days, generate_vars, available_rooms
+from utils.util import get_lecturer_ids, get_module_ids, get_room_ids, modify_modules, read_data_from, generate_days, generate_vars, available_rooms
 
 # INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused (over what values do i want to run again and again?)
 
@@ -36,39 +36,34 @@ def main():
 
 
 def run_model():
-    # Read in data file
-    lecturers= read_data_from("db/lecturers.csv")
-    modules = read_data_from("db/modules.csv")
-    rooms = read_data_from("db/rooms.csv")
+    data = {
+        "lecturers": read_data_from("db/lecturers.csv"),
+        "modules": read_data_from("db/modules.csv"),
+        "rooms": read_data_from("db/rooms.csv"),
+    }
+    data.update({
+        "semesters": sorted(list(set([module.get("semester") for module in data.get("modules")]))),
+        "days": generate_days(data.get("lecturers")),
+    })
+    data.update({
+        "time_slots": range(len(data.get("lecturers")[0][data.get("days")[0]])),
+    })
+    modify_modules(data["modules"]) # Generate praktika
 
-    # Generate praktika
-    modify_modules_data(modules)
-
-    # Create id dictionary
-    lecturer_ids = [lecturer["lecturer_id"] for lecturer in lecturers]
-    module_ids = [module["module_id"] for module in modules]
-    room_ids = [room["room_id"] for room in rooms]
-
-    semesters = sorted(list(set([module["semester"] for module in modules])))
-    days = generate_days(lecturers)
-    time_slots = range(len(lecturers[0][days[0]]))
+    lecturers= data["lecturers"] 
+    modules = data["modules"] 
+    rooms = data["rooms"] 
+    semesters = data["semesters"] 
+    days = data["days"] 
+    time_slots = data["time_slots"] 
     # time_slot_times = ["8:45-9:30","9:30-10:15","10:30-11:15","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
 
-    data = {
-        "lecturers": lecturers,
-        "modules": modules,
-        "semesters": semesters,
-        "days": days,
-        "time_slots": time_slots,
-        "rooms": rooms,
-    }
-
     data_idx:dict[str, dict[str, int]] = {
-        "lecturers":{lecturer_id: num for num, lecturer_id in enumerate(lecturer_ids)},
-        "modules": {module_id: num for num, module_id in enumerate(module_ids)},
+        "lecturers":{lecturer_id: num for num, lecturer_id in enumerate(get_lecturer_ids(lecturers))},
+        "modules": {module_id: num for num, module_id in enumerate(get_module_ids(modules))},
         "semesters": {semester: num for num, semester in enumerate(semesters)},
         "days": {day: num for num, day in enumerate(days)},
-        "rooms": {room_id: num for num, room_id in enumerate(room_ids)},
+        "rooms": {room_id: num for num, room_id in enumerate(get_room_ids(rooms))},
     }
 
     lecturer_idx = data_idx["lecturers"]
@@ -78,12 +73,12 @@ def run_model():
     room_idx  = data_idx["rooms"]
 
     # Add course to module dictionary
-    # TODO string slicing is kinda wanky :D regex?
+    # TODO string slicing is kinda wanky :D
     for module in modules:
         module["course"] = module["module_id"][1:3]
 
     # Create available_rooms_dic to check how many rooms are free for each time_slot
-    available_rooms_dic = {(day, time_slot): [room_id for room_id in room_ids]
+    available_rooms_dic = {(day, time_slot): [room_id for room_id in get_room_ids(rooms)]
         for day in days
         for time_slot in time_slots
         }

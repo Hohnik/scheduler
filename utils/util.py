@@ -29,7 +29,7 @@ def generate_vars(model, data, data_idx):
         return vars
 
 
-def modify_modules_data(modules:list[dict]) -> None:
+def modify_modules(modules:list[dict]) -> None:
     for module_1 in modules:
         for module_2 in modules:
             if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
@@ -103,3 +103,12 @@ def is_module_lecturer(module, lecturer):
         return True
     else:
         return False
+
+def get_lecturer_ids(lecturers:list[dict]) -> list[str]:
+    return [lecturer["lecturer_id"] for lecturer in lecturers]
+
+def get_module_ids(modules:list[dict]) -> list[str]:
+    return [module["module_id"] for module in modules]
+
+def get_room_ids(rooms:list[dict]) -> list[str]:
+    return [room["room_id"] for room in rooms]
