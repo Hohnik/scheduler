@@ -7,7 +7,7 @@ from ortools.sat.python import cp_model
 import utils.generate_lecturers_data as gld
 import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
-from utils.util import read_data_from, generate_days, generate_vars, available_rooms
+from utils.util import modify_modules_data, read_data_from, generate_days, generate_vars, available_rooms
 
 # INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused (over what values do i want to run again and again?)
 
@@ -42,29 +42,7 @@ def run_model():
     rooms = read_data_from("db/rooms.csv")
 
     # Generate praktika
-    # TODO What is this code doing? Can it be moved into a function? Does it just generate data or is it modifying data? @Julio
-    # fix this code to have a return that is a list of dictionaries?
-
-    def modify_modules(modules:list[dict]) -> None:
-        for module_1 in modules:
-            for module_2 in modules:
-                if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
-                    practice, lecture = module_1, module_2
-                    participants = int(lecture["participants"])
-                    num_practices = (int(lecture["participants"]) // int(practice["max_participants"])) + 1
-
-                    for practice_index in range(num_practices):
-                        practice_copy = practice.copy()
-                        practice_copy["module_id"] = practice_copy["module_id"] + '_' + str(practice_index+1)
-                        practice_copy["participants"] = str(participants)
-
-                        participants -= participants // num_practices
-                        num_practices -= 1 
-                        modules.append(practice_copy)
-                    modules.remove(practice)
-
-
-    modify_modules(modules)
+    modify_modules_data(modules)
 
     # Create id dictionary
     lecturer_ids = [lecturer["lecturer_id"] for lecturer in lecturers]

@@ -3,6 +3,7 @@ import pandas as pd
 def read_data_from(path) -> list[dict]:
     return pd.read_csv(path, dtype=str).to_dict(orient="records")
 
+
 def generate_vars(model, data, data_idx):
         vars = {}
         for lecturer in data["lecturers"]:
@@ -26,6 +27,30 @@ def generate_vars(model, data, data_idx):
 
         print("Variables: ", len(vars))
         return vars
+
+
+def modify_modules_data(modules:list[dict]) -> None:
+    for module_1 in modules:
+        for module_2 in modules:
+            if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
+                practice, lecture = module_1, module_2
+                practice_count = (int(lecture["participants"]) // int(practice["max_participants"])) + 1 # 20 is an arbitrary max number of participants for each practice
+                remaining_participants = int(lecture["participants"])
+
+                for practice_index in range(practice_count):
+                    practice_copy = practice.copy()
+                    practice_copy["module_id"] = practice_copy["module_id"] + '_' + str(practice_index+1)
+
+                    participants = remaining_participants // practice_count
+                    practice_copy["participants"] = str(participants)
+                    remaining_participants -= participants
+
+                    practice_count -= 1
+                    modules.append(practice_copy)
+
+                modules.remove(practice)
+
+
 def generate_days(lecturers):
     days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     result = []
@@ -36,6 +61,7 @@ def generate_days(lecturers):
         except KeyError:
             continue
     return result
+
 
 def calculate_session_blocks(leftover_sws:str):
     #return [1]
@@ -54,6 +80,7 @@ def calculate_session_blocks(leftover_sws:str):
 
     return session_blocks
 
+
 def available_rooms(available_rooms_dic, days, time_slots):
     '''number of available rooms per time_slot'''
     numof_available_rooms_lst = [len(available_rooms_dic[(day, time_slot)]) for day in days for time_slot in time_slots]
@@ -65,9 +92,11 @@ def available_rooms(available_rooms_dic, days, time_slots):
             n_a_r_l_dic[elem] = 1
     return n_a_r_l_dic
 
+
 def is_practice(module):
     if module["module_id"][0] == "p":
         return True
+
 
 def is_module_lecturer(module, lecturer):
     if module["lecturer_id"] == lecturer["lecturer_id"]:
