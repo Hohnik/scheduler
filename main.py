@@ -1,10 +1,8 @@
 # by Niklas Hohn & Julien Sauter
 
 import pprint
-import pandas as pd
 from ortools.sat.python import cp_model
 
-from ortools.sat.python.cp_model import IntVar
 
 import utils.generate_lecturers_data as gld
 import utils.generate_modules_data as gmd
@@ -45,27 +43,28 @@ def run_model():
 
     # Generate praktika
     # TODO What is this code doing? Can it be moved into a function? Does it just generate data or is it modifying data? @Julio
-    def generate_practice_data(modules) -> list[dict]:
-        for module in modules:
-            if module["module_id"][0] == "p":
-                module_p = module
-                for module in modules:
-                    if module["module_id"][0] == "l":
-                        module_l = module
-                        if module_p["module_id"][1:] == module_l["module_id"][1:]:
-                            practice_count = (int(module_l["participants"]) // int(module_p["max_participants"])) + 1 # 20 is an arbitrary max number of participants for each practice
-                            remaining_participants = int(module_l["participants"])
-                            for practice_index in range(practice_count):
-                                module_p_copy = module_p.copy()
-                                module_p_copy["module_id"] = module_p_copy["module_id"] + '_' + str(practice_index+1)
+    # fix this code to have a return that is a list of dictionaries?
 
-                                participants = remaining_participants // practice_count
-                                module_p_copy["participants"] = str(participants)
-                                remaining_participants -= participants
-                                practice_count -= 1
-                                modules.append(module_p_copy)
+    def modify_modules(modules:list[dict]) -> None:
+        for module_1 in modules:
+            for module_2 in modules:
+                if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
+                    practice, lecture = module_1, module_2
+                    participants = int(lecture["participants"])
+                    num_practices = (int(lecture["participants"]) // int(practice["max_participants"])) + 1
 
-                            modules.remove(module_p)
+                    for practice_index in range(num_practices):
+                        practice_copy = practice.copy()
+                        practice_copy["module_id"] = practice_copy["module_id"] + '_' + str(practice_index+1)
+                        practice_copy["participants"] = str(participants)
+
+                        participants -= participants // num_practices
+                        num_practices -= 1 
+                        modules.append(practice_copy)
+                    modules.remove(practice)
+
+
+    modify_modules(modules)
 
     # Create id dictionary
     lecturer_ids = [lecturer["lecturer_id"] for lecturer in lecturers]
@@ -99,7 +98,7 @@ def run_model():
     semester_idx  = data_idx["semesters"]
     day_idx  = data_idx["days"]
     room_idx  = data_idx["rooms"]
-    
+
     # Add course to module dictionary
     # TODO string slicing is kinda wanky :D regex?
     for module in modules:
@@ -169,8 +168,6 @@ def run_model():
                                 module["module_id"][0] == room["room_type"]
                                 )
 
-
-
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     for day in days:
         for time_slot in time_slots:
@@ -213,7 +210,6 @@ def run_model():
 
     solver, status = solve_model(model)
     return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status)
-
 
 
 def solve_model(model):
@@ -280,10 +276,5 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
         return None
 
 
-
-
-
 if __name__ == "__main__":
     main()
-
-
