@@ -7,7 +7,7 @@ from ortools.sat.python import cp_model
 import utils.generate_lecturers_data as gld
 import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
-from utils.util import get_lecturer_ids, get_module_ids, get_room_ids, modify_modules, read_data_from, generate_days, generate_vars, available_rooms
+from utils.util import * # get_lecturer_ids, get_module_ids, get_room_ids, modify_modules, read_data_from, generate_days, generate_vars, available_rooms
 
 # INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused (over what values do i want to run again and again?)
 
@@ -87,24 +87,24 @@ def run_model():
     model = cp_model.CpModel()
     timetable = generate_vars(model, data, data_idx)
 
-    # # Constraint consecutive time_slots
-    # for lecturer in lecturers:
-    #     #print(lecturer["lecturer_id"])
-    #     for module in modules:
-    #         session_blocks = calculate_session_blocks(module["sws"])
-    #         for block_size in session_blocks:
-    #             for semester in semesters:
-    #                 if semester == module["semester"]:
-    #                     for day in days:
-    #                         for time_slot, bit in enumerate(lecturer[day][:len(time_slots) - block_size + 1]):  # Adjust based on block size
-    #                             if time_slot < len(lecturer[day]) - block_size + 1:
-    #                                 for room in rooms:
-    #                                     model.AddImplication(timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])],
-    #                                         timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])])
+    # Constraint consecutive time_slots
+    for lecturer in lecturers:
+        #print(lecturer["lecturer_id"])
+        for module in modules:
+            session_blocks = calculate_session_blocks(module["sws"])
+            for block_size in session_blocks:
+                for semester in semesters:
+                    if semester == module["semester"]:
+                        for day in days:
+                            for time_slot, bit in enumerate(lecturer[day][:len(time_slots) - block_size + 1]):  # Adjust based on block size
+                                if time_slot < len(lecturer[day]) - block_size + 1:
+                                    for room in rooms:
+                                        model.AddImplication(timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])],
+                                            timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])])
 
-    #                                     model.AddImplication(t0m, t1e)
+                                        model.AddImplication(t0m, t1e)
 
-    #                                     model.AddImplication(t0s, t2e)
+                                        model.AddImplication(t0s, t2e)
 
     # if two block_sizes are the same, we need an additional constraint to enforce that block_1 != block_2, probably taken care of by the constraint that lecturers cannot be scheduled for two time_slots at the same time
 
