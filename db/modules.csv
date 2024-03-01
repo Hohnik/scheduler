@@ -1,11 +1,11 @@
 module_id,semester,sws,participants,max_participants,lecturer_id,module_name
-lKI210,2KI,2,26,26,001,Data Science II
+lKI210,2KI,2,49,49,001,Data Science II
 pKI210,2KI,2,0,20,001,Data Science II Praktikum
-lKI220,2KI,4,27,27,005,Mathematik II
+lKI220,2KI,4,38,38,005,Mathematik II
 pKI220,2KI,2,0,20,005,Mathematik II Praktikum
 lKI230,2KI,4,46,46,004,Programmieren II
 pKI230,2KI,2,0,20,004,Programmieren II Praktikum
-lKI240,2KI,2,41,41,004,Praxisgrundlagen der Informatik
+lKI240,2KI,2,32,32,004,Praxisgrundlagen der Informatik
 pKI240,2KI,2,0,20,004-006-001,Praxisgrundlagen der Informatik Praktikum
-lKI250,2KI,3,36,36,003,Statistik
+lKI250,2KI,3,34,34,003,Statistik
 pKI250,2KI,1,0,20,003,Statistik Praktikum

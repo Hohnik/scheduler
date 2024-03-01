@@ -26,8 +26,8 @@ from utils.util import * # get_lecturer_ids, get_module_ids, get_room_ids, modif
 # HEURISTIC for each module for each room, Optimise: just over half full rooms (normal distribution, slightly right-skewed)
 
 def main():
-    gld.generate_data()
-    gmd.create_data()
+    # gld.generate_data()
+    # gmd.create_data()
     result_object = run_model()
     if result_object:
         printer = TablePrinter(result_object)
@@ -48,6 +48,10 @@ def run_model():
     data.update({
         "time_slots": range(len(data.get("lecturers")[0][data.get("days")[0]])),
     })
+    data.update({
+        "positions": ["s", "m_1", "e"] # We can add a key max_block_size in modules.csv to indicate the longest block_size for each module. Then we can calculate the possible positions for each module, but we would have to slightly adjust the calculate_session_blocks function to allow for different block_sizes for each module. Just add the parameter module["max_block_size"] to calculate_session_blocks which then defines which block_size calculation logic is used. Currently, the longest block_size is 3. This would be the default value.
+    })
+    
     modify_modules(data["modules"]) # Generate praktika
 
     lecturers= data["lecturers"] 
@@ -87,24 +91,26 @@ def run_model():
     model = cp_model.CpModel()
     timetable = generate_vars(model, data, data_idx)
 
-    # Constraint consecutive time_slots
-    for lecturer in lecturers:
-        #print(lecturer["lecturer_id"])
-        for module in modules:
-            session_blocks = calculate_session_blocks(module["sws"])
-            for block_size in session_blocks:
-                for semester in semesters:
-                    if semester == module["semester"]:
-                        for day in days:
-                            for time_slot, bit in enumerate(lecturer[day][:len(time_slots) - block_size + 1]):  # Adjust based on block size
-                                if time_slot < len(lecturer[day]) - block_size + 1:
-                                    for room in rooms:
-                                        model.AddImplication(timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])],
-                                            timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])])
+    print("Variables: ", len(timetable))
+    
+    # # Constraint consecutive time_slots
+    # for lecturer in lecturers:
+    #     #print(lecturer["lecturer_id"])
+    #     for module in modules:
+    #         session_blocks = calculate_session_blocks(module["sws"])
+    #         for block_size in session_blocks:
+    #             for semester in semesters:
+    #                 if semester == module["semester"]:
+    #                     for day in days:
+    #                         for time_slot, bit in enumerate(lecturer[day][:len(time_slots) - block_size + 1]):  # Adjust based on block size
+    #                             if time_slot < len(lecturer[day]) - block_size + 1:
+    #                                 for room in rooms:
+    #                                     model.AddImplication(timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])],
+    #                                         timetable[(lecturer_idx[lecturer["lecturer_id"]], module_idx[module["module_id"]], semester_idx[semester], day_idx[day], time_slot, room_idx[room["room_id"]])])
 
-                                        model.AddImplication(t0m, t1e)
+    #                                     model.AddImplication(t0m, t1e)
 
-                                        model.AddImplication(t0s, t2e)
+    #                                     model.AddImplication(t0s, t2e)
 
     # if two block_sizes are the same, we need an additional constraint to enforce that block_1 != block_2, probably taken care of by the constraint that lecturers cannot be scheduled for two time_slots at the same time
 

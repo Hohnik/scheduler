@@ -12,20 +12,20 @@ def generate_vars(model, data, data_idx):
                     for day in data["days"]:
                         for time_slot in data["time_slots"]:
                             for room in data["rooms"]:
-                                vars[
-                                    (
-                                        data_idx["lecturers"][lecturer["lecturer_id"]],
-                                        data_idx["modules"][module["module_id"]],
-                                        data_idx["semesters"][semester],
-                                        data_idx["days"][day],
-                                        time_slot,
-                                        data_idx["rooms"][room["room_id"]],
+                                for position in data["positions"]:
+                                    vars[
+                                        (
+                                            data_idx["lecturers"][lecturer["lecturer_id"]],
+                                            data_idx["modules"][module["module_id"]],
+                                            data_idx["semesters"][semester],
+                                            data_idx["days"][day],
+                                            time_slot,
+                                            data_idx["rooms"][room["room_id"]],
+                                        )
+                                    ] = model.NewBoolVar(
+                                        f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{room["room_id"]}'
                                     )
-                                ] = model.NewBoolVar(
-                                    f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{room["room_id"]}'
-                                )
 
-        print("Variables: ", len(vars))
         return vars
 
 
@@ -34,7 +34,7 @@ def modify_modules(modules:list[dict]) -> None:
         for module_2 in modules:
             if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
                 practice, lecture = module_1, module_2
-                practice_count = (int(lecture["participants"]) // int(practice["max_participants"])) + 1 # 20 is an arbitrary max number of participants for each practice
+                practice_count = (int(lecture["participants"]) // int(practice["max_participants"])) + 1
                 remaining_participants = int(lecture["participants"])
 
                 for practice_index in range(practice_count):
