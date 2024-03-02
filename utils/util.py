@@ -71,23 +71,49 @@ def generate_days(lecturers):
     return result
 
 
-def calculate_session_blocks(leftover_sws:str):
+# def calculate_session_blocks(leftover_sws:str):
+#     #return [1]
+#     session_blocks = []
+#     leftover_sws = int(leftover_sws)
+#     while leftover_sws > 0:
+#         if leftover_sws % 2 == 0:
+#             leftover_sws -= 2
+#             session_blocks.append(2)
+#         elif leftover_sws >= 3:
+#             leftover_sws -= 3
+#             session_blocks.append(3)
+#         elif leftover_sws == 1:
+#             leftover_sws -= 1
+#             session_blocks.append(1)
+
+#     return session_blocks
+
+def calculate_session_blocks(sws:str) -> dict[tuple[int, int], int]:
     #return [1]
-    session_blocks = []
-    leftover_sws = int(leftover_sws)
+    block_sizes_dic = {}
+    num = 0
+    key_1 = 0
+    key_2 = 0
+    key_3 = 0
+    leftover_sws = int(sws)
     while leftover_sws > 0:
         if leftover_sws % 2 == 0:
+            block_sizes_dic[(2, key_2)] = num
+            num += 1
+            key_2 += 1
             leftover_sws -= 2
-            session_blocks.append(2)
         elif leftover_sws >= 3:
+            block_sizes_dic[(3, key_3)] = num
+            num += 1
+            key_3 += 1
             leftover_sws -= 3
-            session_blocks.append(3)
         elif leftover_sws == 1:
+            block_sizes_dic[(1, key_1)] = num
+            num += 1
+            key_1 += 1
             leftover_sws -= 1
-            session_blocks.append(1)
-
-    return session_blocks
-
+    
+    return block_sizes_dic
 
 def available_rooms(available_rooms_dic, days, time_slots):
     '''number of available rooms per time_slot'''
