@@ -56,11 +56,11 @@ def run_model():
 
     lecturers= data["lecturers"] 
     modules = data["modules"] 
-    rooms = data["rooms"] 
     semesters = data["semesters"] 
     days = data["days"] 
-    positions = data["positions"]
     time_slots = data["time_slots"]
+    positions = data["positions"]
+    rooms = data["rooms"] 
     # time_slot_times = ["8:45-9:30","9:30-10:15","10:30-11:15","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
 
     data_idx:dict[str, dict[str, int]] = {

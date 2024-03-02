@@ -11,23 +11,28 @@ def generate_vars(model, data, data_idx):
         for lecturer in data["lecturers"]:
             for module in data["modules"]:
                 for semester in data["semesters"]:
-                    for day in data["days"]:
-                        for time_slot in data["time_slots"]:
-                            for position in data["positions"]:
-                                for room in data["rooms"]:
-                                    vars[
-                                        (
+                    block_type_tracker = []
+                    for block in module["block_sizes_dic"]:
+                        block_type = block[0]
+                        if block_type in block_type_tracker:
+                            continue
+                        else:
+                            block_type_tracker.append(block_type)
+                        for day in data["days"]:
+                            for time_slot in data["time_slots"]:
+                                for position in data["positions"]:
+                                    for room in data["rooms"]:
+                                        vars[(
                                             data_idx["lecturers"][lecturer["lecturer_id"]],
                                             data_idx["modules"][module["module_id"]],
                                             data_idx["semesters"][semester],
                                             data_idx["days"][day],
-                                            time_slot,
                                             data_idx["positions"][position],
+                                            block_type,
                                             data_idx["rooms"][room["room_id"]],
+                                        )] = model.NewBoolVar(
+                                            f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{block_type}_{room["room_id"]}'
                                         )
-                                    ] = model.NewBoolVar(
-                                        f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{room["room_id"]}'
-                                    )
 
         return vars
 
