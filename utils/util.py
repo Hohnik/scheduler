@@ -1,6 +1,8 @@
 import pandas as pd
+from ortools.sat.python import cp_model
 
-def read_data_from(path) -> list[dict]:
+
+def data_to_dict_from(path) -> list[dict]:
     return pd.read_csv(path, dtype=str).to_dict(orient="records")
 
 
@@ -11,8 +13,8 @@ def generate_vars(model, data, data_idx):
                 for semester in data["semesters"]:
                     for day in data["days"]:
                         for time_slot in data["time_slots"]:
-                            for room in data["rooms"]:
-                                for position in data["positions"]:
+                            for position in data["positions"]:
+                                for room in data["rooms"]:
                                     vars[
                                         (
                                             data_idx["lecturers"][lecturer["lecturer_id"]],
@@ -20,10 +22,11 @@ def generate_vars(model, data, data_idx):
                                             data_idx["semesters"][semester],
                                             data_idx["days"][day],
                                             time_slot,
+                                            data_idx["positions"][position],
                                             data_idx["rooms"][room["room_id"]],
                                         )
                                     ] = model.NewBoolVar(
-                                        f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{room["room_id"]}'
+                                        f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{room["room_id"]}'
                                     )
 
         return vars
@@ -49,6 +52,11 @@ def modify_modules(modules:list[dict]) -> None:
                     modules.append(practice_copy)
 
                 modules.remove(practice)
+
+                lecture_copy = lecture.copy()
+                lecture_copy["module_id"] = lecture_copy["module_id"] + '_0'
+                modules.append(lecture_copy)
+                modules.remove(lecture)
 
 
 def generate_days(lecturers):
@@ -112,3 +120,74 @@ def get_module_ids(modules:list[dict]) -> list[str]:
 
 def get_room_ids(rooms:list[dict]) -> list[str]:
     return [room["room_id"] for room in rooms]
+
+def solve_model(model):
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+    print(solver.SolutionInfo())
+    print(
+        f"Status:{solver.StatusName()}",
+        f"Bools:{solver.NumBooleans()}",
+        f"Branches:{solver.NumBranches()}",
+        f"Conflicts:{solver.NumConflicts()}",
+        sep="\n",
+    )
+    return (solver, status)
+    #return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic)
+
+def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status):
+    lecturers = data["lecturers"]
+    modules = data["modules"]
+    semesters  = data["semesters"]
+    days  = data["days"]
+    time_slots  = data["time_slots"]
+    positions  = data["positions"]
+    rooms  = data["rooms"]
+    
+    lecturer_idx = data_idx["lecturers"]
+    module_idx = data_idx["modules"]
+    semester_idx  = data_idx["semesters"]
+    day_idx  = data_idx["days"]
+    position_idx  = data_idx["positions"]
+    room_idx  = data_idx["rooms"]
+
+    solution:dict[str, dict[str, dict[int, list | str]]] = {}
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        for semester in semesters:
+            solution.update({semester: {}})
+            print(semester)
+            for day in days:
+                solution[semester].update({day: {}})
+                print(day)
+                for time_slot in time_slots:
+                    solution[semester][day].update({time_slot: {}})
+                    for lecturer in lecturers:
+                        for module in modules:
+                            for position in positions:
+                                for room in rooms:
+
+                                    if solver.Value(timetable[(
+                                            lecturer_idx[lecturer["lecturer_id"]], 
+                                            module_idx[module["module_id"]],
+                                            semester_idx[semester], 
+                                            day_idx[day], 
+                                            time_slot,
+                                            position_idx[position], 
+                                            room_idx[room["room_id"]])]):
+
+                                        solution[semester][day][time_slot].update({
+                                            "lecturer": lecturer,
+                                            "module": module,
+                                            "position": position,
+                                            "room": room,
+                                        })
+                                        print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
+                                        if available_rooms_dic[(day, time_slot)].count(room["room_id"]):
+                                            available_rooms_dic[(day, time_slot)].remove(room["room_id"])
+
+        print("RoomsAvailable: ", available_rooms(available_rooms_dic, days, time_slots))
+        return solution
+    else:
+        # print(solver.ResponseStats())
+        print("No feasible solution found.")
+        return None

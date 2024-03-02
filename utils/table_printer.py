@@ -19,7 +19,7 @@ def main():
 
 class TablePrinter():
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-    def __init__(self, solution: dict[str, dict[str, dict[int, list]]]) -> None:
+    def __init__(self, solution: dict[str, dict[str, dict[int, list | str]]]) -> None:
         self.solution = solution
         self.col_width = self.calc_dynamic_col_width(solution)
         self.line_top = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"

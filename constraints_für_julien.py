@@ -10,9 +10,9 @@ import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
 from utils.util import *
 
-lecturers= read_data_from("db/lecturers.csv")
-modules = read_data_from("db/modules.csv")
-rooms = read_data_from("db/rooms.csv")
+lecturers= data_to_dict_from("db/lecturers.csv")
+modules = data_to_dict_from("db/modules.csv")
+rooms = data_to_dict_from("db/rooms.csv")
 
 # Generate praktika
 # TODO What is this code doing? Can it be moved into a function? Does it just generate data or is it modifying data? @Julio
