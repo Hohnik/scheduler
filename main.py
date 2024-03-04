@@ -48,18 +48,19 @@ def run_model():
     data.update({
         "time_slots": range(len(data.get("lecturers")[0][data.get("days")[0]])),
     })
-    data.update({
-        "positions": ["s", "m_1", "e"] # ORDER IS IMPORTANT. We can add a key max_block_size in modules.csv to indicate the longest block_size for each module. Then we can calculate the possible positions for each module, but we would have to slightly adjust the calculate_session_blocks function to allow for different block_sizes for each module. Just add the parameter module["max_block_size"] to calculate_session_blocks which then defines which block_size calculation logic is used. Currently, the longest block_size is 3. This would be the default value.
-    })
+    # data.update({
+    #     "positions": ["s", "m_1", "e"] # ORDER IS IMPORTANT. We can add a key max_block_size in modules.csv to indicate the longest block_size for each module. Then we can calculate the possible positions for each module, but we would have to slightly adjust the calculate_session_blocks function to allow for different block_sizes for each module. # TODO Just add the parameter module["max_block_size"] to calculate_session_blocks which then defines which block_size calculation logic is used. Currently, the longest block_size is 3. This would be the default value.
+    # })
     
     modify_modules(data["modules"]) # Generate praktika
 
-    lecturers= data["lecturers"] 
+    lecturers = data["lecturers"] 
     modules = data["modules"] 
     semesters = data["semesters"] 
     days = data["days"] 
     time_slots = data["time_slots"]
-    positions = data["positions"]
+    # positions = data["positions"]
+    
     rooms = data["rooms"] 
     # time_slot_times = ["8:45-9:30","9:30-10:15","10:30-11:15","11:15-12:00","12:50-13:35","13:35-14:20","14:30-15:15","15:15-16:00","16:10-16:55","16:55-17:40","17:50-18:35","18:35-19:20","19:30-20:15","20:15-21:00"]
 
@@ -68,7 +69,8 @@ def run_model():
         "modules": {module_id: num for num, module_id in enumerate(get_module_ids(modules))},
         "semesters": {semester: num for num, semester in enumerate(semesters)},
         "days": {day: num for num, day in enumerate(days)},
-        "positions": {position: num for num, position in enumerate(positions)},
+        # "positions": {position: num for num, position in enumerate(positions)},
+        "positions": {"s": 0, "m_0": 1, "e": 2},
         "rooms": {room_id: num for num, room_id in enumerate(get_room_ids(rooms))},
     }
 
@@ -107,30 +109,32 @@ def run_model():
     print("Variables: ", len(timetable))
     
     # Constraint consecutive time_slots
-    for module in modules:
-        for lecturer in lecturers:
+    for lecturer in lecturers:
+        for module in modules:
             # lecturer implied, if statement allowed
             if lecturer["lecturer_id"] in module["lecturer_id"]:
                 for semester in semesters:
                     # semester implied, if statement allowed
                     if semester == module["semester"]:
-                        for block in module["block_sizes_dic"]:
-                            for day in days:
-                                skip_time_slots = 0
-                                for time_slot, bit in enumerate(lecturer[day]):
+                        for day in days:
+                            skip_time_slots = 0
+                            for time_slot, bit in enumerate(lecturer[day]):
 
-                                    # check this first so that skip_time_slots doesn't get messed up, might have to check logic
-                                    if skip_time_slots > 0:
-                                        skip_time_slots -= 1
-                                        #print("skipping", day, time_slot)
-                                        lecturer["skip_time_slots"][(day, time_slot)] = True
-                                        continue
-                                    if lecturer["skip_time_slots"][(day, time_slot)]:
-                                        continue
-                                    
-                                    # bit implied, if statement allowed
-                                    if bit == "1":
+                                # check this first so that skip_time_slots doesn't get messed up, might have to check logic
+                                if skip_time_slots > 0:
+                                    skip_time_slots -= 1
+                                    #print("skipping", day, time_slot)
+                                    lecturer["skip_time_slots"][(day, time_slot)] = True
+                                    continue
+                                if lecturer["skip_time_slots"][(day, time_slot)]:
+                                    continue
+                                
+                                # bit implied, if statement allowed
+                                if bit == "1":
+                                    for block in module["block_sizes_dic"]:
                                         block_size = block[0]
+                                        if block_size == 1:
+                                            continue
                                         # enough time_slots available for block_size
                                         if time_slot < (len(lecturer[day]) - block_size + 1):
                                             for room in rooms:
@@ -140,41 +144,42 @@ def run_model():
                                                 s = semesters_idx[semester]
                                                 d = days_idx[day]
                                                 t = time_slot
+                                                b = module["block_sizes_dic"][block]
                                                 r = rooms_idx[room["room_id"]]
 
-                                                if block_size > 1:
-                                                    block_bool_vars:list[IntVar] = [timetable[(l, m, s, d, t+offset, positions_idx[position], r)]
-                                                        for offset in range(block_size)
-                                                        for position in positions
-                                                        ]
-                                                    #print(block_bool_vars)
-                                                    #print(len(block_bool_vars))
-                                                    block_bool_vars_counter:int = block_size
-                                                    for offset in range(1, block_size):
-                                                        if lecturer[day][time_slot+offset] == "0":
-                                                            for var in block_bool_vars[(len(positions)*offset)-1:(len(positions)*offset+1)-1]:
-                                                                model.Add(var == 0) # If lecturer is not available during any time of block, block cannot be scheduled
-                                                            block_bool_vars_counter -= 1
 
-                                                    # skip as many time_slots as possible to save resources
-                                                    #print(block_bool_vars_counter)
-                                                        skip_time_slots = block_size
-                                                        
-                                                        for keep_steps in range(block_bool_vars_counter): # == block_size - (time_slot bits equal to 0)
-                                                            skip_time_slots -= 1
-                                                        if skip_time_slots > 0:
-                                                            #print("didn't arrive at Implication", day, time_slot)
-                                                            continue
+                                                block_bool_vars:list[IntVar] = [timetable[(l, m, s, d, t+offset, positions_idx[position], b, r)]
+                                                    for offset in range(block_size)
+                                                    for position in calculate_positions(block_size) # We're doing this calculation multiple times right now, we could just generate a dictionary based on the max_block_size which could have the block_size as the key and the corresponding position list as the value.
+                                                    ]
+                                                #print(block_bool_vars)
+                                                #print(len(block_bool_vars))
+                                                block_bool_vars_counter:int = block_size
+                                                for offset in range(1, block_size):
+                                                    if lecturer[day][time_slot+offset] == "0":
+                                                        for var in block_bool_vars[(block_size*offset)-1:(block_size*offset+1)-1]:
+                                                            model.Add(var == 0) # If lecturer is not available during any time of block, block cannot be scheduled
+                                                        block_bool_vars_counter -= 1
+
+                                                # skip as many time_slots as possible to save resources
+                                                #print(block_bool_vars_counter)
+                                                    skip_time_slots = block_size
+                                                    
+                                                    for keep_steps in range(block_bool_vars_counter): # == block_size - (time_slot bits equal to 0)
+                                                        skip_time_slots -= 1
+                                                    if skip_time_slots > 0:
+                                                        #print("didn't arrive at Implication", day, time_slot)
+                                                        continue
 
                                                 if block_size == 2:
-                                                    model.AddImplication(timetable[(l, m, s, d, t, positions_idx["s"], r)],
-                                                        timetable[(l, m, s, d, t+1, positions_idx["e"], r)])
-                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], r)],
-                                                        timetable[(l, m, s, d, t, positions_idx["s"], r)])
-                                                    model.AddImplication(timetable[(l, m, s, d, t, positions_idx["s"], r)].Not(),
-                                                        timetable[(l, m, s, d, t+1, positions_idx["e"], r)].Not())
-                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], r)].Not(),
-                                                        timetable[(l, m, s, d, t, positions_idx["s"], r)].Not())
+                                                    model.AddImplication(timetable[(l, m, s, d, t, positions_idx["s"], b, r)],
+                                                        timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)])
+                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)],
+                                                        timetable[(l, m, s, d, t, positions_idx["s"], b, r)])
+                                                    model.AddImplication(timetable[(l, m, s, d, t, positions_idx["s"], b, r)].Not(),
+                                                        timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)].Not())
+                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)].Not(),
+                                                        timetable[(l, m, s, d, t, positions_idx["s"], b, r)].Not())
 
                                     # model.AddImplication(timetable[(l, m, s, d, t, positions_idx[position], r)],
                                     #     position != "m_1")
@@ -205,44 +210,46 @@ def run_model():
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
-                for day in days:
-                    for time_slot, bit in enumerate(lecturer[day]):
-                        for position in positions:
-                            for room in rooms:
+                for block in module["block_sizes_dic"]:
+                    for day in days:
+                        for time_slot, bit in enumerate(lecturer[day]):
+                            for position in positions:
+                                for room in rooms:
 
-                                # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
-                                model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])],
-                                    bit == "1"
-                                    )
+                                    # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
+                                    model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])],
+                                        bit == "1"
+                                        )
 
-                                # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
-                                model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])],
-                                    lecturer["lecturer_id"] in module["lecturer_id"]
-                                    )
+                                    # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
+                                    model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])],
+                                        lecturer["lecturer_id"] in module["lecturer_id"]
+                                        )
 
-                                # Implied for every module that semester == module["semester"] | modules linked to respective semesters
-                                model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])],
-                                    semester == module["semester"]
-                                    )
+                                    # Implied for every module that semester == module["semester"] | modules linked to respective semesters
+                                    model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])],
+                                        semester == module["semester"]
+                                        )
 
-                                # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
-                                model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])],
-                                    room["capacity"] >= module["participants"]
-                                    )
+                                    # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
+                                    model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])],
+                                        room["capacity"] >= module["participants"]
+                                        )
 
-                                # Implied for every room that module["module_id"][0] == room["room_type"] | room type fits to module type
-                                model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])],
-                                    module["module_id"][0] == room["room_type"]
-                                    )
+                                    # Implied for every room that module["module_id"][0] == room["room_type"] | room type fits to module type
+                                    model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])],
+                                        module["module_id"][0] == room["room_type"]
+                                        )
 
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     for day in days:
         for time_slot in time_slots:
             for room in rooms:
-                model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])]
+                model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])]
                 for lecturer in lecturers
                 for module in modules
                 for semester in semesters
+                for block in module["block_sizes_dic"]
                 for position in positions
                 )
 
@@ -250,9 +257,10 @@ def run_model():
     for lecturer in lecturers:
         for day in days:
             for time_slot in time_slots:
-                model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])]
+                model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])]
                 for module in modules
                 for semester in semesters
+                for block in module["block_sizes_dic"]
                 for position in positions
                 for room in rooms
                 )
@@ -261,20 +269,22 @@ def run_model():
     for semester in semesters:
         for day in days:
             for time_slot in time_slots:
-                model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])]
+                model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])]
                 for lecturer in lecturers
                 for module in modules
-                for room in rooms
+                for block in module["block_sizes_dic"]
                 for position in positions
+                for room in rooms
                 )
 
     # Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
     for module in modules:
-        model.Add(cp_model.LinearExpr.Sum([timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], rooms_idx[room["room_id"]])]
+        model.Add(cp_model.LinearExpr.Sum([timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])]
             for lecturer in lecturers
             for semester in semesters
             for day in days
             for time_slot in time_slots
+            for block in module["block_sizes_dic"]
             for position in positions
             for room in rooms
         ]) == int(module["sws"]))

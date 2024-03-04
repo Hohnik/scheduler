@@ -11,16 +11,17 @@ def generate_vars(model, data, data_idx):
         for lecturer in data["lecturers"]:
             for module in data["modules"]:
                 for semester in data["semesters"]:
-                    block_type_tracker = []
+                    # block_type_tracker = []
                     for block in module["block_sizes_dic"]:
-                        block_type = block[0]
-                        if block_type in block_type_tracker:
-                            continue
-                        else:
-                            block_type_tracker.append(block_type)
+                        # block_type = block[0]
+                        # if block_type in block_type_tracker:
+                        #     continue
+                        # else:
+                        #     block_type_tracker.append(block_type)
                         for day in data["days"]:
                             for time_slot in data["time_slots"]:
-                                for position in data["positions"]:
+                                block_size = block[0]
+                                for position in calculate_positions(block_size):
                                     for room in data["rooms"]:
                                         vars[(
                                             data_idx["lecturers"][lecturer["lecturer_id"]],
@@ -28,14 +29,28 @@ def generate_vars(model, data, data_idx):
                                             data_idx["semesters"][semester],
                                             data_idx["days"][day],
                                             data_idx["positions"][position],
-                                            block_type,
+                                            module["block_sizes_dic"][block],
                                             data_idx["rooms"][room["room_id"]],
                                         )] = model.NewBoolVar(
-                                            f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{block_type}_{room["room_id"]}'
+                                            f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{block}_{room["room_id"]}'
                                         )
 
         return vars
 
+def calculate_positions(block_size):
+    if block_size == 1:
+        return ["s"]
+    elif block_size == 2:
+        return ["s", "e"]
+    elif block_size >= 3:
+        return ["s"] + calculate_block_size_greater3(block_size-2, block_size-2) + ["e"]
+
+def calculate_block_size_greater3(block_size, num):
+    if block_size == 1:
+        return [f"m_{num-1}"]
+    else:
+        num -= 1
+        return calculate_block_size_greater3(block_size-1, num) + [f"m_{num}"]
 
 def modify_modules(modules:list[dict]) -> None:
     for module_1 in modules:
@@ -222,3 +237,17 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
         # print(solver.ResponseStats())
         print("No feasible solution found.")
         return None
+    
+if __name__ == "__main__":
+    
+    # print(calculate_positions(1))
+    # print(calculate_positions(2))
+    # print(calculate_positions(3))
+    # print(calculate_positions(4))
+    # print(calculate_positions(5))
+    # print(calculate_positions(6))
+    # print(calculate_positions(7))
+    # print(calculate_positions(8))
+    # print(calculate_positions(9))
+    
+    pass
