@@ -2,6 +2,9 @@ import pandas as pd
 from ortools.sat.python import cp_model
 from time import time
 
+from utils.solution_printer import SolutionPrinter
+from utils.table_printer import TablePrinter
+
 
 def data_to_dict_from(path) -> list[dict]:
     return pd.read_csv(path, dtype=str).to_dict(orient="records")
@@ -178,7 +181,7 @@ def solve_model(model):
     solver = cp_model.CpSolver()
     print("Solving...")
     start_time = time()
-    status = solver.Solve(model)
+    status = solver.Solve(model, )
     print("Solved.")
     end_time = time()
     print(f"{round(end_time - start_time, 2)} secs")

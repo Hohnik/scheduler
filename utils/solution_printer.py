@@ -16,4 +16,3 @@ class SolutionPrinter(cp_model.CpSolverSolutionCallback):
 
     def solution_count(self):
         return self.__solution_count
-        return self.__solution_count

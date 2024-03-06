@@ -39,7 +39,8 @@ def main():
     
     if result_object:
         print("Printing solution as Timetable...")
-        printer = TablePrinter(result_object)
+        printer = TablePrinter()
+        printer.set_solution(result_object)
         # pprint.pprint(result_object)
         printer.print_semester_tables()
 

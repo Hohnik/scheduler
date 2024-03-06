@@ -19,13 +19,9 @@ def main():
 
 class TablePrinter():
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-    def __init__(self, solution: dict[str, dict[str, dict[int, list | str]]]) -> None:
-        self.solution = solution
-        # self.col_width = self.calc_dynamic_col_width(solution)
-        self.col_width = 30
-        self.line_top = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
-        self.line_mid = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
-        self.line_bot = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
+
+    def __init__(self, print_rows=False) -> None:
+        self.print_rows = print_rows
 
     def print_semester_tables(self, *args, **kwargs):
         for table_string in self.generate_semester_table_strings():
@@ -45,7 +41,7 @@ class TablePrinter():
     def _generate_semester(self, semester):
         result = ""
         result += self._generate_header(semester)
-        result += self._generate_body(semester, False)
+        result += self._generate_body(semester)
         result += self._generate_footer()
 
         return result
@@ -61,7 +57,7 @@ class TablePrinter():
 
         return result
 
-    def _generate_body(self, semester, print_rows: bool):
+    def _generate_body(self, semester):
         result = ""
 
         for time_slot in range(self._calculate_max_slot() + 1):
@@ -74,7 +70,7 @@ class TablePrinter():
                 try:
                     data = self.solution[semester][day][time_slot]
 
-                    if print_rows:
+                    if self.print_rows:
                         module = f'{data["module"]["module_id"]}'
                         lecturer = f'{data["lecturer"]["lecturer_name"]}'
                         room = f'{data["room"]["room_id"]}'
@@ -96,7 +92,7 @@ class TablePrinter():
                     continue
 
             result += self.line_mid
-            if print_rows:
+            if self.print_rows:
                 result += f'|{"":^{self.col_width //2}}|'
                 result += "|".join(module_fields) + "|\n"
 
@@ -117,15 +113,18 @@ class TablePrinter():
         return result
 
     def calc_dynamic_col_width(self, solution):
+        spaces = 3
+        spaces += 0 if self.print_rows else 1
+
         words = []
         for semester in solution.values():
             for day in semester.values():
                 for slot in day.values():
                     try: 
-                        words.append(len(slot["lecturer"]["lecturer_name"]) + len(slot["module"]["module_id"]))
+                        words.append(len(slot["lecturer"]["lecturer_name"]) + len(slot["module"]["module_id"]) + len(slot["position"]))
                     except KeyError:
                         pass
-        return max(words) + 3
+        return max(words) + spaces
 
     def _calculate_max_slot(self):
         result = 0
@@ -134,6 +133,17 @@ class TablePrinter():
                 current_max = list(time_slots.keys())[-1]
                 result =  max(current_max, result)
         return result
+
+    def set_solution(self, solution: dict[str, dict[str, dict[int, list | str]]]):
+        self.solution = solution
+        self.render_lines(solution)
+
+    def render_lines(self, solution):
+        # self.col_width = 30
+        self.col_width = self.calc_dynamic_col_width(solution)
+        self.line_top = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
+        self.line_mid = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
+        self.line_bot = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
 
 
 if __name__ == "__main__":
