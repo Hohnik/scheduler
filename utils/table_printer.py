@@ -21,9 +21,10 @@ class TablePrinter():
     days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
     def __init__(self, solution: dict[str, dict[str, dict[int, list | str]]]) -> None:
         self.solution = solution
-        self.col_width = self.calc_dynamic_col_width(solution)
+        # self.col_width = self.calc_dynamic_col_width(solution)
+        self.col_width = 30
         self.line_top = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
-        self.line = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
+        self.line_mid = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
         self.line_bot = "+"+"-"*(self.col_width//2)+"+"+(("-"*self.col_width)+"+")*(len(self.days)-1)+ ("-"*self.col_width)+"+\n"
 
     def print_semester_tables(self, *args, **kwargs):
@@ -44,7 +45,7 @@ class TablePrinter():
     def _generate_semester(self, semester):
         result = ""
         result += self._generate_header(semester)
-        result += self._generate_body(semester)
+        result += self._generate_body(semester, False)
         result += self._generate_footer()
 
         return result
@@ -60,23 +61,53 @@ class TablePrinter():
 
         return result
 
-    def _generate_body(self, semester):
+    def _generate_body(self, semester, print_rows: bool):
         result = ""
 
         for time_slot in range(self._calculate_max_slot() + 1):
-            result += self.line
-            result += f'|{time_slot+1:^{self.col_width //2}}|'
-
+            module_fields = []
+            lecturer_fields = []
+            room_fields = []
             fields = []
+
             for day in self.days:
                 try:
                     data = self.solution[semester][day][time_slot]
-                    text = f'{data["module"]["module_id"]}, {data["lecturer"]["lecturer_name"]}'
-                    fields.append(f'{text:<{self.col_width}}')
+
+                    if print_rows:
+                        module = f'{data["module"]["module_id"]}'
+                        lecturer = f'{data["lecturer"]["lecturer_name"]}'
+                        room = f'{data["room"]["room_id"]}'
+
+                        module_fields.append(f'{module:^{self.col_width}}')
+                        lecturer_fields.append(f'{lecturer:^{self.col_width}}')
+                        room_fields.append(f'{room:^{self.col_width}}')
+                    
+                    else:
+                        text = f'{data["position"]}, {data["module"]["module_id"]}, {data["lecturer"]["lecturer_name"]}'
+                        fields.append(f'{text:<{self.col_width}}')
+
+
                 except KeyError:
+                    module_fields.append(f'{"":{self.col_width}}')
+                    lecturer_fields.append(f'{"---":^{self.col_width}}')
+                    room_fields.append(f'{"":{self.col_width}}')
                     fields.append(f'{"---":^{self.col_width}}')
                     continue
-            result += "|".join(fields) + "|\n"
+
+            result += self.line_mid
+            if print_rows:
+                result += f'|{"":^{self.col_width //2}}|'
+                result += "|".join(module_fields) + "|\n"
+
+                result += f'|{time_slot+1:^{self.col_width //2}}|'
+                result += "|".join(lecturer_fields) + "|\n"
+
+                result += f'|{"":^{self.col_width //2}}|'
+                result += "|".join(room_fields) + "|\n"
+            else:
+                result += f'|{time_slot+1:^{self.col_width //2}}|'
+                result += "|".join(fields) + "|\n"
 
         return result
     
