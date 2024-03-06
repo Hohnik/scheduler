@@ -32,7 +32,7 @@ def main():
     start_time = time()
     result_object = run_model()
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
     
     if result_object:
         print("Printing solution as Timetable...")
@@ -246,7 +246,7 @@ def run_model():
 
     # if two block_sizes are the same, we need an additional constraint to enforce that block_1 != block_2, probably taken care of by the constraint that lecturers cannot be scheduled for two time_slots at the same time
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
     
     # Implications
     print("Calculating Constraint: Implications")
@@ -286,7 +286,7 @@ def run_model():
                                         module["module_id"][0] == room["room_type"]
                                         )
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
 
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
     print("Calculating Constraint: two modules cannot be scheduled in the same room at the same time")
@@ -302,7 +302,7 @@ def run_model():
                 for position in calculate_positions(block[0])
                 )
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
     
     # At most one module per lecturer per time_slot | a lecturer cannot be scheduled for two modules at the same time
     print("Calculating Constraint: a lecturer cannot be scheduled for two modules at the same time")
@@ -318,7 +318,7 @@ def run_model():
                 for room in rooms
                 )
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
 
     # At most one module per semester per time_slot | two modules in the same semester cannot be scheduled at the same time
     print("Calculating Constraint: two modules in the same semester cannot be scheduled at the same time")
@@ -334,7 +334,7 @@ def run_model():
                 for room in rooms
                 )
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
 
     # Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
     print("Calculating Constraint: All sws have to be scheduled")
@@ -350,7 +350,7 @@ def run_model():
             for room in rooms
         ]) == int(module["sws"]))
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
 
     print("Finished Calculating Constraints.")
     solver, status = solve_model(model)

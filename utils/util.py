@@ -39,7 +39,7 @@ def generate_vars(model, data, data_idx):
                                         f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{block}_{room["room_id"]}'
                                     )
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
     return vars
 
 def calculate_positions(block_size):
@@ -179,7 +179,7 @@ def solve_model(model):
     status = solver.Solve(model)
     print("Solved.")
     end_time = time()
-    print(f"{(end_time - start_time)} seconds")
+    print(f"{round(end_time - start_time, 1)} seconds")
     print(
         f"Status:{solver.StatusName()}",
         f"Bools:{solver.NumBooleans()}",
@@ -246,7 +246,7 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
     
         print("Solution retrieved.")
         end_time = time()
-        print(f"{(end_time - start_time)} seconds")
+        print(f"{round(end_time - start_time, 1)} seconds")
     
         print("RoomsAvailable: ", available_rooms(available_rooms_dic, days, time_slots))
         return solution
