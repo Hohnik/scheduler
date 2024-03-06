@@ -8,6 +8,7 @@ import utils.generate_lecturers_data as gld
 import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
 from utils.util import * # get_lecturer_ids, get_module_ids, get_room_ids, modify_modules, read_data_from, generate_days, generate_vars, available_rooms
+from time import time
 
 # INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused (over what values do i want to run again and again?)
 
@@ -28,14 +29,20 @@ from utils.util import * # get_lecturer_ids, get_module_ids, get_room_ids, modif
 def main():
     # gld.generate_data()
     # gmd.create_data()
+    start_time = time()
     result_object = run_model()
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
+    
     if result_object:
+        print("Printing solution as Timetable...")
         printer = TablePrinter(result_object)
         # pprint.pprint(result_object)
         printer.print_semester_tables()
 
 
 def run_model():
+    print("Running model...")
     data: dict[str, list[dict] | list[str] | range] = {
         "lecturers": data_to_dict_from("db/lecturers.csv"),
         "modules": data_to_dict_from("db/modules.csv"),
@@ -108,7 +115,11 @@ def run_model():
 
     print("Variables: ", len(timetable))
     
+    # Define the constraints
+    # print("Define the constraints")
     # Constraint consecutive time_slots
+    print("Calculating Constraint: consecutive time_slots")
+    start_time = time()
     for lecturer in lecturers:
         for module in modules:
             # lecturer implied, if statement allowed
@@ -175,6 +186,7 @@ def run_model():
                                                         timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)])
                                                     model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)],
                                                         timetable[(l, m, s, d, t, positions_idx["s"], b, r)])
+                                                    
                                                     model.AddImplication(timetable[(l, m, s, d, t, positions_idx["s"], b, r)].Not(),
                                                         timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)].Not())
                                                     model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)].Not(),
@@ -185,11 +197,20 @@ def run_model():
                                                         timetable[(l, m, s, d, t+1, positions_idx["m_0"], b, r)])
                                                     model.AddImplication(timetable[(l, m, s, d, t, positions_idx["m_0"], b, r)],
                                                         timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)])
+                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)],
+                                                        timetable[(l, m, s, d, t, positions_idx["m_0"], b, r)])
+                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["m_0"], b, r)],
+                                                        timetable[(l, m, s, d, t, positions_idx["s"], b, r)])
+                                                    
                                                     
                                                     model.AddImplication(timetable[(l, m, s, d, t, positions_idx["s"], b, r)].Not(),
                                                         timetable[(l, m, s, d, t+1, positions_idx["m_0"], b, r)].Not())
                                                     model.AddImplication(timetable[(l, m, s, d, t, positions_idx["m_0"], b, r)].Not(),
                                                         timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)].Not())
+                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["e"], b, r)].Not(),
+                                                        timetable[(l, m, s, d, t, positions_idx["m_0"], b, r)].Not())
+                                                    model.AddImplication(timetable[(l, m, s, d, t+1, positions_idx["m_0"], b, r)].Not(),
+                                                        timetable[(l, m, s, d, t, positions_idx["s"], b, r)].Not())
                                                 
                                                 # if t > 0:
                                                 #     current_block_idx = b
@@ -224,8 +245,12 @@ def run_model():
                                                         # model.AddImplication(t0s, t2e)
 
     # if two block_sizes are the same, we need an additional constraint to enforce that block_1 != block_2, probably taken care of by the constraint that lecturers cannot be scheduled for two time_slots at the same time
-
-    # Define the constraints
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
+    
+    # Implications
+    print("Calculating Constraint: Implications")
+    start_time = time()
     for lecturer in lecturers:
         for module in modules:
             for semester in semesters:
@@ -260,8 +285,12 @@ def run_model():
                                     model.AddImplication(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])],
                                         module["module_id"][0] == room["room_type"]
                                         )
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
 
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
+    print("Calculating Constraint: two modules cannot be scheduled in the same room at the same time")
+    start_time = time()
     for day in days:
         for time_slot in time_slots:
             for room in rooms:
@@ -272,8 +301,12 @@ def run_model():
                 for block in module["block_sizes_dic"]
                 for position in calculate_positions(block[0])
                 )
-
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
+    
     # At most one module per lecturer per time_slot | a lecturer cannot be scheduled for two modules at the same time
+    print("Calculating Constraint: a lecturer cannot be scheduled for two modules at the same time")
+    start_time = time()
     for lecturer in lecturers:
         for day in days:
             for time_slot in time_slots:
@@ -284,8 +317,12 @@ def run_model():
                 for position in calculate_positions(block[0])
                 for room in rooms
                 )
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
 
     # At most one module per semester per time_slot | two modules in the same semester cannot be scheduled at the same time
+    print("Calculating Constraint: two modules in the same semester cannot be scheduled at the same time")
+    start_time = time()
     for semester in semesters:
         for day in days:
             for time_slot in time_slots:
@@ -296,8 +333,12 @@ def run_model():
                 for position in calculate_positions(block[0])
                 for room in rooms
                 )
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
 
     # Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
+    print("Calculating Constraint: All sws have to be scheduled")
+    start_time = time()
     for module in modules:
         model.Add(cp_model.LinearExpr.Sum([timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])]
             for lecturer in lecturers
@@ -308,7 +349,10 @@ def run_model():
             for position in calculate_positions(block[0])
             for room in rooms
         ]) == int(module["sws"]))
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
 
+    print("Finished Calculating Constraints.")
     solver, status = solve_model(model)
     return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status)
 

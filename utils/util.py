@@ -1,5 +1,6 @@
 import pandas as pd
 from ortools.sat.python import cp_model
+from time import time
 
 
 def data_to_dict_from(path) -> list[dict]:
@@ -7,36 +8,39 @@ def data_to_dict_from(path) -> list[dict]:
 
 
 def generate_vars(model, data, data_idx):
-        vars = {}
-        for lecturer in data["lecturers"]:
-            for module in data["modules"]:
-                for semester in data["semesters"]:
-                    # block_type_tracker = []
-                    for block in module["block_sizes_dic"]:
-                        # block_type = block[0]
-                        # if block_type in block_type_tracker:
-                        #     continue
-                        # else:
-                        #     block_type_tracker.append(block_type)
-                        for day in data["days"]:
-                            for time_slot in data["time_slots"]:
-                                block_size = block[0]
-                                for position in calculate_positions(block_size):
-                                    for room in data["rooms"]:
-                                        vars[(
-                                            data_idx["lecturers"][lecturer["lecturer_id"]],
-                                            data_idx["modules"][module["module_id"]],
-                                            data_idx["semesters"][semester],
-                                            data_idx["days"][day],
-                                            time_slot,
-                                            data_idx["positions"][position],
-                                            module["block_sizes_dic"][block],
-                                            data_idx["rooms"][room["room_id"]],
-                                        )] = model.NewBoolVar(
-                                            f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{block}_{room["room_id"]}'
-                                        )
-
-        return vars
+    print("Generating variables...")
+    start_time = time()
+    vars = {}
+    for lecturer in data["lecturers"]:
+        for module in data["modules"]:
+            for semester in data["semesters"]:
+                # block_type_tracker = []
+                for block in module["block_sizes_dic"]:
+                    # block_type = block[0]
+                    # if block_type in block_type_tracker:
+                    #     continue
+                    # else:
+                    #     block_type_tracker.append(block_type)
+                    for day in data["days"]:
+                        for time_slot in data["time_slots"]:
+                            block_size = block[0]
+                            for position in calculate_positions(block_size):
+                                for room in data["rooms"]:
+                                    vars[(
+                                        data_idx["lecturers"][lecturer["lecturer_id"]],
+                                        data_idx["modules"][module["module_id"]],
+                                        data_idx["semesters"][semester],
+                                        data_idx["days"][day],
+                                        time_slot,
+                                        data_idx["positions"][position],
+                                        module["block_sizes_dic"][block],
+                                        data_idx["rooms"][room["room_id"]],
+                                    )] = model.NewBoolVar(
+                                        f'{lecturer["lecturer_id"]}_{module["module_id"]}_{semester}_{day}_{time_slot}_{position}_{block}_{room["room_id"]}'
+                                    )
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
+    return vars
 
 def calculate_positions(block_size):
     if block_size == 1:
@@ -170,8 +174,12 @@ def get_room_ids(rooms:list[dict]) -> list[str]:
 
 def solve_model(model):
     solver = cp_model.CpSolver()
+    print("Solving...")
+    start_time = time()
     status = solver.Solve(model)
-    print(solver.SolutionInfo())
+    print("Solved.")
+    end_time = time()
+    print(f"{(end_time - start_time)} seconds")
     print(
         f"Status:{solver.StatusName()}",
         f"Bools:{solver.NumBooleans()}",
@@ -198,14 +206,16 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
     position_idx  = data_idx["positions"]
     room_idx  = data_idx["rooms"]
 
+    print("Retrieving solution...")
+    start_time = time()
     solution:dict[str, dict[str, dict[int, list | str]]] = {}
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         for semester in semesters:
             solution.update({semester: {}})
-            print(semester)
+            # print(semester)
             for day in days:
                 solution[semester].update({day: {}})
-                print(day)
+                # print(day)
                 for time_slot in time_slots:
                     solution[semester][day].update({time_slot: {}})
                     for lecturer in lecturers:
@@ -230,10 +240,14 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
                                                 "position": position,
                                                 "room": room,
                                             })
-                                            print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
+                                            # print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
                                             if available_rooms_dic[(day, time_slot)].count(room["room_id"]):
                                                 available_rooms_dic[(day, time_slot)].remove(room["room_id"])
-
+    
+        print("Solution retrieved.")
+        end_time = time()
+        print(f"{(end_time - start_time)} seconds")
+    
         print("RoomsAvailable: ", available_rooms(available_rooms_dic, days, time_slots))
         return solution
     else:
