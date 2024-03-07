@@ -84,7 +84,7 @@ class TablePrinter():
                         room_fields.append(f'{room:^{self.col_width}}')
                     
                     else:
-                        text = f'{data["position"]}, {data["module"]["module_id"]}, {data["lecturer"]["lecturer_name"]}'
+                        text = f'{data["position"]}, {data["module"]["block_sizes_dic"][data["block"]]}, {data["module"]["module_id"]}, {data["lecturer"]["lecturer_name"]}'
                         fields.append(f'{text:<{self.col_width}}')
 
 

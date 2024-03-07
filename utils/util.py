@@ -242,6 +242,7 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
                                                 "lecturer": lecturer,
                                                 "module": module,
                                                 "position": position,
+                                                "block": block,
                                                 "room": room,
                                             })
                                             # print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
