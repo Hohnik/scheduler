@@ -47,20 +47,20 @@ def generate_vars(model, data, data_idx):
     print()
     return vars
 
-def calculate_positions(block_size):
+def calculate_positions(block_size:int) -> list[str]:
     if block_size == 1:
         return ["s"]
     elif block_size == 2:
         return ["s", "e"]
     elif block_size >= 3:
-        return ["s"] + calculate_block_size_greater3(block_size-2, block_size-2) + ["e"]
+        return ["s"] + calculate_positions_for_block_size_greater3(block_size-2, block_size-2) + ["e"]
 
-def calculate_block_size_greater3(block_size, num):
+def calculate_positions_for_block_size_greater3(block_size, num):
     if block_size == 1:
         return [f"m_{num-1}"]
     else:
         num -= 1
-        return calculate_block_size_greater3(block_size-1, num) + [f"m_{num}"]
+        return calculate_positions_for_block_size_greater3(block_size-1, num) + [f"m_{num}"]
 
 def modify_modules(modules:list[dict]) -> None:
     for module_1 in modules:

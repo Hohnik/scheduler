@@ -440,6 +440,23 @@ def run_model():
     end_time = time()
     print(f"{round(end_time - start_time, 2)} secs")
     print()
+    
+    # At most one time_slot per position per block | a single module_sws's (one time_slot) position within a block cannot be at two different time_slots if it has the same block_idx
+    print("Calculating Constraint: a lecturer cannot be scheduled for two modules at the same time")
+    start_time = time()
+    for lecturer in lecturers:
+        for module in modules:
+            for semester in semesters:
+                for block in module["block_sizes_dic"]:
+                    for position in calculate_positions(block[0]):
+                        for room in rooms:
+                            model.AddAtMostOne(timetable[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], semesters_idx[semester], days_idx[day], time_slot, positions_idx[position], module["block_sizes_dic"][block], rooms_idx[room["room_id"]])]
+                            for day in days
+                            for time_slot in time_slots
+                            )
+    end_time = time()
+    print(f"{round(end_time - start_time, 2)} secs")
+    print()
 
     # At most one module per semester per time_slot | two modules in the same semester cannot be scheduled at the same time
     print("Calculating Constraint: two modules in the same semester cannot be scheduled at the same time")
