@@ -476,7 +476,7 @@ def run_model():
     print()
 
     print("Finished Calculating Constraints.")
-    solver, status = solve_model(model)
+    solver, status = solve_model(model, timetable)
     return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status)
 
 

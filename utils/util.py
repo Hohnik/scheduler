@@ -177,11 +177,12 @@ def get_module_ids(modules:list[dict]) -> list[str]:
 def get_room_ids(rooms:list[dict]) -> list[str]:
     return [room["room_id"] for room in rooms]
 
-def solve_model(model):
+def solve_model(model, vars):
     solver = cp_model.CpSolver()
     print("Solving...")
     start_time = time()
-    status = solver.Solve(model, )
+    solution_printer = SolutionPrinter(list(vars.values()))
+    status = solver.Solve(model,solution_printer)
     print("Solved.")
     end_time = time()
     print(f"{round(end_time - start_time, 2)} secs")
