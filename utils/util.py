@@ -2,8 +2,8 @@ import pandas as pd
 from ortools.sat.python import cp_model
 from time import time
 
-from utils.solution_printer import SolutionPrinter
-from utils.table_printer import TablePrinter
+from solution_printer import SolutionPrinter
+from table_printer import TablePrinter
 
 
 def data_to_dict_from(path) -> list[dict]:
@@ -53,14 +53,14 @@ def calculate_positions(block_size:int) -> list[str]:
     elif block_size == 2:
         return ["s", "e"]
     elif block_size >= 3:
-        return ["s"] + calculate_positions_for_block_size_greater3(block_size-2, block_size-2) + ["e"]
+        return ["s"] + calculate_positions_for_block_size_greater3(block_size-2) + ["e"]
 
-def calculate_positions_for_block_size_greater3(block_size, num):
+def calculate_positions_for_block_size_greater3(block_size):
     if block_size == 1:
-        return [f"m_{num-1}"]
+        return [f"m_0"]
+
     else:
-        num -= 1
-        return calculate_positions_for_block_size_greater3(block_size-1, num) + [f"m_{num}"]
+        return calculate_positions_for_block_size_greater3(block_size-1) + [f"m_{block_size-1}"]
 
 def modify_modules(modules:list[dict]) -> None:
     for module_1 in modules:
