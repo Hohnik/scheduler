@@ -2,8 +2,10 @@ import pandas as pd
 from ortools.sat.python import cp_model
 from time import time
 
-from solution_printer import SolutionPrinter
-from table_printer import TablePrinter
+from utils.solution_printer import SolutionPrinter
+
+# from solution_printer import SolutionPrinter
+# from table_printer import TablePrinter
 
 
 def data_to_dict_from(path) -> list[dict]:

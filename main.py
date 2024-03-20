@@ -1,13 +1,13 @@
 # by Niklas Hohn & Julien Sauter
 
-import pprint
+# import pprint
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import IntVar
 
-import utils.generate_lecturers_data as gld
-import utils.generate_modules_data as gmd
+# import utils.generate_lecturers_data as gld
+# import utils.generate_modules_data as gmd
 from utils.table_printer import TablePrinter
-from utils.util import * # get_lecturer_ids, get_module_ids, get_room_ids, modify_modules, read_data_from, generate_days, generate_vars, available_rooms
+from utils.util import * #get_lecturer_ids, get_module_ids, get_room_ids, modify_modules, read_data_from, generate_days, generate_vars, available_rooms
 from time import time
 
 # INFO: all for loops above contraint are consumed, and all for loops in constraint are chosen/reused (over what values do i want to run again and again?)
