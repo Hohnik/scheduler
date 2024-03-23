@@ -1,3 +1,4 @@
+import pprint
 import pandas as pd
 from ortools.sat.python import cp_model
 from time import time
@@ -64,7 +65,8 @@ def calculate_positions_for_block_size_greater3(block_size):
     else:
         return calculate_positions_for_block_size_greater3(block_size-1) + [f"m_{block_size-1}"]
 
-def modify_modules(modules:list[dict]) -> None:
+def modify_modules(modules:list[dict]) -> list[dict]:
+    modules_new = []
     for module_1 in modules:
         for module_2 in modules:
             if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
@@ -81,14 +83,16 @@ def modify_modules(modules:list[dict]) -> None:
                     remaining_participants -= participants
 
                     practice_count -= 1
-                    modules.append(practice_copy)
+                    modules_new.append(practice_copy)
 
-                modules.remove(practice)
+                # modules.remove(practice)
 
                 lecture_copy = lecture.copy()
                 lecture_copy["module_id"] = lecture_copy["module_id"] + '_0'
-                modules.append(lecture_copy)
-                modules.remove(lecture)
+                modules_new.append(lecture_copy)
+                # modules.remove(lecture)
+    pprint.pprint(modules_new)
+    return modules_new
 
 
 def generate_days(lecturers):

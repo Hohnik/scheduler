@@ -64,7 +64,7 @@ def run_model():
     #     "positions": ["s", "m_1", "e"] # ORDER IS IMPORTANT. We can add a key max_block_size in modules.csv to indicate the longest block_size for each module. Then we can calculate the possible positions for each module, but we would have to slightly adjust the calculate_session_blocks function to allow for different block_sizes for each module. # TODO Just add the parameter module["max_block_size"] to calculate_session_blocks which then defines which block_size calculation logic is used. Currently, the longest block_size is 3. This would be the default value.
     # })
     
-    modify_modules(data["modules"]) # Generate praktika
+    data["modules"] = modify_modules(data["modules"]) # Generate praktika
 
     lecturers = data["lecturers"] 
     modules = data["modules"] 
