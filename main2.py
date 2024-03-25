@@ -72,9 +72,10 @@ def run_model():
         }
 
     model = cp_model.CpModel()
+    VarGenObj = VarGen(model, data, data_idx)
     
     # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
-    hasTime = generate_hasTime(model, data, data_idx)
+    hasTime = VarGenObj.hasTime()
     for lecturer in lecturers:
         for day in days:
             for time_slot, bit in enumerate(lecturers[day]):
@@ -83,7 +84,7 @@ def run_model():
                     )
     
     # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
-    correctLecturer = generate_correctLecturer(model, data, data_idx)
+    correctLecturer = VarGenObj.correctLecturer()
     for lecturer in lecturers:
         for module in modules:
             model.AddImplication(correctLecturer[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["modules_id"]])],
@@ -91,11 +92,63 @@ def run_model():
                 )
     
     # Implied for every module that semester == module["semester"] | modules linked to respective semesters
-    correctSemester = generate_correctSemester(model, data, data_idx)
+    correctSemester = VarGenObj.correctSemester()
     for module in modules:
         for semester in semesters:
             model.AddImplication(correctSemester[(modules_idx[module["modules_id"]], semesters_idx[semester])],
                 semester == module["semester"]
                 )
+
+    # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
+    fittingRoom = VarGenObj.fittingRoom()
+    for module in modules:
+        for room in rooms:
+            model.AddImplication(fittingRoom[(modules_idx[module["module_id"]], rooms_idx[room["room_id"]])],
+                room["capacity"] >= module["participants"]
+                )
+            model.AddImplication(fittingRoom[(modules_idx[module["module_id"]], rooms_idx[room["room_id"]])],
+                module["module_id"][0] == room["room_type"]
+            )
     
+    # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
+    oneModulePerRoom = VarGenObj.oneModulePerRoom()
+    for day in days:
+        for time_slot in time_slots:
+            for room in rooms:
+                model.AddAtMostOne(oneModulePerRoom[(modules_idx[module["module_id"]], days_idx[day], time_slot, rooms_idx[room["room_id"]])]
+                for module in modules
+                )
+            for module in modules:
+                model.AddAtMostOne(oneModulePerRoom[(modules_idx[module["module_id"]], days_idx[day], time_slot, rooms_idx[room["room_id"]])]
+                for room in rooms
+                )
     
+    # At most one module per lecturer per time_slot | a lecturer cannot be scheduled for two modules at the same time
+    oneModulePerLecturer = VarGenObj.oneModulePerLecturer()
+    for day in days:
+        for time_slot in time_slots:
+            for lecturer in lecturers:
+                model.AddAtMostOne(oneModulePerLecturer[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], days_idx[day], time_slot)]
+                for module in modules
+                )
+            for module in modules:
+                model.AddAtMostOne(oneModulePerLecturer[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]], days_idx[day], time_slot)]
+                for lecturer in lecturers
+                )
+    
+    # At most one module per semester per time_slot | two modules in the same semester cannot be scheduled at the same time
+    oneModulePerSemester = VarGenObj.oneModulePerSemester()
+    for semester in semesters:
+        for day in days:
+            for time_slot in time_slots:
+                model.AddAtMostOne(oneModulePerSemester[(modules_idx[module["module_id"]], semesters_idx[module["semester"]], days_idx[day], time_slot)]
+                for module in modules
+                )
+    
+    # Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
+    correctSWS = VarGenObj.correctSWS()
+    for module in modules:
+        model.Add(cp_model.LinearExpr(correctSWS[(modules_idx[module["module_id"]], days_idx[day], time_slot
+        for day in days
+        for time_slot in time_slots
+        )] == int(module["sws"])))
