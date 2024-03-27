@@ -83,3 +83,71 @@ def calculate_session_blocks(sws:str) -> dict[tuple[int, int], int]:
             leftover_sws -= 1
     
     return block_sizes_dic
+
+def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status):
+    lecturers = data["lecturers"]
+    modules = data["modules"]
+    semesters  = data["semesters"]
+    days  = data["days"]
+    time_slots  = data["time_slots"]
+    # positions  = data["positions"]
+    rooms  = data["rooms"]
+    
+    lecturer_idx = data_idx["lecturers"]
+    module_idx = data_idx["modules"]
+    semester_idx  = data_idx["semesters"]
+    day_idx  = data_idx["days"]
+    position_idx  = data_idx["positions"]
+    room_idx  = data_idx["rooms"]
+
+    print("Retrieving solution...")
+    start_time = time()
+    solution:dict[str, dict[str, dict[int, list | str]]] = {}
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        for semester in semesters:
+            solution.update({semester: {}})
+            # print(semester)
+            for day in days:
+                solution[semester].update({day: {}})
+                # print(day)
+                for time_slot in time_slots:
+                    solution[semester][day].update({time_slot: {}})
+                    for lecturer in lecturers:
+                        for module in modules:
+                            for block in module["block_sizes_dic"]:
+                                for position in calculate_positions(block[0]):
+                                    for room in rooms:
+
+                                        if solver.Value(timetable[(
+                                            lecturer_idx[lecturer["lecturer_id"]], 
+                                            module_idx[module["module_id"]],
+                                            semester_idx[semester], 
+                                            day_idx[day], 
+                                            time_slot,
+                                            position_idx[position],
+                                            module["block_sizes_dic"][block],
+                                            room_idx[room["room_id"]])]):
+
+                                            solution[semester][day][time_slot].update({
+                                                "lecturer": lecturer,
+                                                "module": module,
+                                                "position": position,
+                                                "block": block,
+                                                "room": room,
+                                            })
+                                            # print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
+                                            if available_rooms_dic[(day, time_slot)].count(room["room_id"]):
+                                                available_rooms_dic[(day, time_slot)].remove(room["room_id"])
+    
+        print("Solution retrieved.")
+        end_time = time()
+        print(f"{round(end_time - start_time, 2)} secs")
+        print()
+    
+        print("RoomsAvailable: ", available_rooms(available_rooms_dic, days, time_slots))
+        return solution
+    else:
+        # print(solver.ResponseStats())
+        print("No feasible solution found.")
+        return None
+    

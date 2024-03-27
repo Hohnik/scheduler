@@ -3,10 +3,11 @@ from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import IntVar
 
 from utils.util2 import *
-from utils.util2_generate_vars import *
+from utils.BoolVarGenerator import *
+from Solver import Solver
 
 def main():
-    pass
+    run_model()
 
 def run_model():
     
@@ -72,35 +73,36 @@ def run_model():
         }
 
     model = cp_model.CpModel()
-    VarGenObj = VarGen(model, data, data_idx)
+    VarGenObj = BoolVarGenerator(model, data, data_idx)
+    SolverObj = Solver(model)
     
     # Implied for every lecturer for every time_slot that time_slot bit == "1" | lecturers only give lectures when they are free (bit == "1")
-    hasTime = VarGenObj.hasTime()
+    hasTime = VarGenObj.generateHasTime()
     for lecturer in lecturers:
         for day in days:
-            for time_slot, bit in enumerate(lecturers[day]):
+            for time_slot, bit in enumerate(lecturer[day]):
                 model.AddImplication(hasTime[(lecturers_idx[lecturer["lecturer_id"]], days_idx[day], time_slot)],
                     bit == "1"
                     )
     
     # Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
-    correctLecturer = VarGenObj.correctLecturer()
+    correctLecturer = VarGenObj.generateCorrectLecturer()
     for lecturer in lecturers:
         for module in modules:
-            model.AddImplication(correctLecturer[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["modules_id"]])],
+            model.AddImplication(correctLecturer[(lecturers_idx[lecturer["lecturer_id"]], modules_idx[module["module_id"]])],
                 lecturer["lecturer_id"] in module["lecturer_id"]
                 )
     
     # Implied for every module that semester == module["semester"] | modules linked to respective semesters
-    correctSemester = VarGenObj.correctSemester()
+    correctSemester = VarGenObj.generateCorrectSemester()
     for module in modules:
         for semester in semesters:
-            model.AddImplication(correctSemester[(modules_idx[module["modules_id"]], semesters_idx[semester])],
+            model.AddImplication(correctSemester[(modules_idx[module["module_id"]], semesters_idx[semester])],
                 semester == module["semester"]
                 )
 
     # Implied for every room that room["capacity"] >= module["participants"] | room has enough space for the module
-    fittingRoom = VarGenObj.fittingRoom()
+    fittingRoom = VarGenObj.generateFittingRoom()
     for module in modules:
         for room in rooms:
             model.AddImplication(fittingRoom[(modules_idx[module["module_id"]], rooms_idx[room["room_id"]])],
@@ -111,7 +113,7 @@ def run_model():
             )
     
     # At most one room per module per time_slot | two modules cannot be scheduled in the same room at the same time
-    oneModulePerRoom = VarGenObj.oneModulePerRoom()
+    oneModulePerRoom = VarGenObj.generateOneModulePerRoom()
     for day in days:
         for time_slot in time_slots:
             for room in rooms:
@@ -124,7 +126,7 @@ def run_model():
                 )
     
     # At most one module per lecturer per time_slot | a lecturer cannot be scheduled for two modules at the same time
-    oneModulePerLecturer = VarGenObj.oneModulePerLecturer()
+    oneModulePerLecturer = VarGenObj.generateOneModulePerLecturer()
     for day in days:
         for time_slot in time_slots:
             for lecturer in lecturers:
@@ -137,7 +139,7 @@ def run_model():
                 )
     
     # At most one module per semester per time_slot | two modules in the same semester cannot be scheduled at the same time
-    oneModulePerSemester = VarGenObj.oneModulePerSemester()
+    oneModulePerSemester = VarGenObj.generateOneModulePerSemester()
     for semester in semesters:
         for day in days:
             for time_slot in time_slots:
@@ -146,9 +148,16 @@ def run_model():
                 )
     
     # Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
-    correctSWS = VarGenObj.correctSWS()
+    correctSWS = VarGenObj.generateCorrectSWS()
     for module in modules:
-        model.Add(cp_model.LinearExpr(correctSWS[(modules_idx[module["module_id"]], days_idx[day], time_slot
+        model.Add(cp_model.LinearExpr.Sum([correctSWS[(modules_idx[module["module_id"]], days_idx[day], time_slot)]
         for day in days
         for time_slot in time_slots
-        )] == int(module["sws"])))
+        ]) == int(module["sws"]))
+        
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
+    print(solver.StatusName())
+    
+if __name__ == "__main__":
+    main()
