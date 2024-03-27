@@ -12,6 +12,12 @@ class Data():
         self.unpack_data()
         self.unpack_data_idx()
         
+        self.add_module_course()
+        self.generate_lecturer_skipped_time_slots()
+        self.generate_module_session_blocks()
+        
+        self.available_rooms_dict = self.generate_available_rooms_dic()
+        
     def unpack_data(self):
         self.lecturers = self.data["lecturers"] 
         self.modules = self.data["modules"] 
@@ -21,12 +27,12 @@ class Data():
         self.rooms = self.data["rooms"]
         
     def unpack_data_idx(self):
-        self.lecturers_idx = {lecturer_id: num for num, lecturer_id in enumerate(self.get_lecturer_ids(self.lecturers))}
-        self.modules_idx = {module_id: num for num, module_id in enumerate(self.get_module_ids(self.modules))}
+        self.lecturers_idx = {lecturer_id: num for num, lecturer_id in enumerate(self.get_lecturer_ids())}
+        self.modules_idx = {module_id: num for num, module_id in enumerate(self.get_module_ids())}
         self.semesters_idx  = {semester: num for num, semester in enumerate(self.semesters)}
         self.days_idx  = {day: num for num, day in enumerate(self.days)}
         self.positions_idx = {"s": 0, "m_0": 1, "e": 2}
-        self.rooms_idx  = {room_id: num for num, room_id in enumerate(self.get_room_ids(self.rooms))}
+        self.rooms_idx  = {room_id: num for num, room_id in enumerate(self.get_room_ids())}
 
     def get_lecturer_ids(self) -> list[str]:
         return [lecturer["lecturer_id"] for lecturer in self.lecturers]
@@ -48,8 +54,7 @@ class Data():
         return {
             "semesters": sorted(list(set([module.get("semester") for module in self.data.get("modules")])))
         }
-        
-
+    
     def generate_days(self):
         days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
         result = []
@@ -69,7 +74,7 @@ class Data():
         }
 
     @classmethod
-    def data_to_dict(path) -> list[dict]:
+    def data_to_dict(self, path) -> list[dict]:
         return pd.read_csv(path, dtype=str).to_dict(orient="records")
     
     def modified_modules(self) -> None:
@@ -102,3 +107,60 @@ class Data():
             #     modules_new.append(module_1)
         
         return modules_new
+    
+    def add_module_course(self):
+        """
+        Add course to module dictionary
+        """
+        for module in self.modules:
+            module["course"] = module["module_id"][1:3]
+
+    def generate_lecturer_skipped_time_slots(self):
+        """
+        Generate lecturer["skip_time_slots"] dictionary for each lecturer for faster access
+        """
+        for lecturer in self.lecturers:
+            lecturer["skip_time_slots"] = {(day, time_slot): bit == "0" for day in self.days for time_slot, bit in enumerate(self.time_slots)}
+    
+    def generate_module_session_blocks(self):
+        """
+        Calculate module["session_blocks"] list for each module
+        """
+        for module in self.modules:
+            module["block_sizes_dic"] = self.calculate_session_blocks(module["sws"])
+    
+    def generate_available_rooms_dic(self):
+        """
+        Create available_rooms_dic to check how many rooms are free for each time_slot
+        """
+        return {
+            (day, time_slot): [room_id for room_id in self.get_room_ids()]
+            for day in self.days
+            for time_slot in self.time_slots
+        }
+    
+    def calculate_session_blocks(self, sws:str) -> dict[tuple[int, int], int]:
+        block_sizes_dic = {}
+        num = 0
+        key_1 = 0
+        key_2 = 0
+        key_3 = 0
+        leftover_sws = int(sws)
+        while leftover_sws > 0:
+            if leftover_sws % 2 == 0:
+                block_sizes_dic[(2, key_2)] = num
+                num += 1
+                key_2 += 1
+                leftover_sws -= 2
+            elif leftover_sws >= 3:
+                block_sizes_dic[(3, key_3)] = num
+                num += 1
+                key_3 += 1
+                leftover_sws -= 3
+            elif leftover_sws == 1:
+                block_sizes_dic[(1, key_1)] = num
+                num += 1
+                key_1 += 1
+                leftover_sws -= 1
+        
+        return block_sizes_dic

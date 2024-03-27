@@ -1,5 +1,4 @@
 from ortools.sat.python.cp_model import CpModel
-from Solver import Solver
 from Data import Data
 
 

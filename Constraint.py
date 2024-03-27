@@ -1,15 +1,8 @@
-from ortools.sat.python import cp_model
-from ortools.sat.python.cp_model import CpModel, IntVar
+class Constraint():
 
-from utils.BoolVarGenerator import BoolVarGenerator
-from Data import Data
-
-class Solver():
-
-    def __init__(self, model:CpModel) -> None:
+    def __init__(self, model, data):
         self.model = model
-        self.data = Data()
-        self.BoolVarGenObj = BoolVarGenerator(self.model, self.data)
+        self.data = data
         
     def constraintHasTime(self):
         """
@@ -22,7 +15,7 @@ class Solver():
                     self.model.AddImplication(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
                         bit == "1"
                         )
-
+    
     def constraintCorrectLecturer(self):
         """
         Implied for every module that lecturer["lecturer_id"] in module["lecturer_id"] | modules can only be taught by their corresponding lecturer
@@ -33,7 +26,7 @@ class Solver():
                 self.model.AddImplication(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
                     lecturer["lecturer_id"] in module["lecturer_id"]
                     )
-
+    
     def constraintCorrectSemester(self):
         """
         Implied for every module that semester == module["semester"] | modules linked to respective semesters
@@ -104,65 +97,3 @@ class Solver():
                     )
 
     def constraintCorrectSWS(self):
-        """
-        Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
-        """
-        self.correctSWS = self.BoolVarGenObj.generateCorrectSWS()
-        for module in self.data.modules:
-            self.model.Add(cp_model.LinearExpr.Sum([self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
-            for day in self.data.days
-            for time_slot in self.data.time_slots
-            ]) == int(module["sws"]))
-
-    def addConstraints(self):
-        self.constraintHasTime()
-        self.constraintCorrectLecturer()
-        self.constraintCorrectSemester()
-        self.constraintfittingRoom()
-        self.constraintOneModulePerRoom()
-        self.constraintOneModulePerLecturer()
-        self.constraintOneModulePerSemester()
-        self.constraintCorrectSWS()
-
-    def solve(self):
-        self.CPsolver = cp_model.CpSolver()
-        self.CPstatus = self.CPsolver.Solve(self.model)
-        return (self.CPsolver, self.CPstatus)
-    
-    def retrieve_solution(self):
-        solution:dict[str, dict[str, dict[int, list | str]]] = {}
-        if self.CPstatus == cp_model.OPTIMAL or self.CPstatus == cp_model.FEASIBLE:
-            for semester in self.data.semesters:
-                solution.update({semester: {}})
-                for day in self.data.days:
-                    solution[semester].update({day: {}})
-                    for time_slot in self.data.time_slots:
-                        solution[semester][day].update({time_slot: {}})
-                        for lecturer in self.data.lecturers:
-                            for module in self.data.modules:
-                                for room in self.data.rooms:
-
-                                    if (
-                                            self.CPsolver.Value(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)])
-                                        # and self.CPsolver.Value(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])])
-                                        # and self.CPsolver.Value(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])])
-                                        # and self.CPsolver.Value(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])])
-                                        # and self.CPsolver.Value(self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])])
-                                        # and self.CPsolver.Value(self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)])
-                                        # and self.CPsolver.Value(self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)])
-                                        # and self.CPsolver.Value(self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)])
-                                    ):
-                                        solution[semester][day][time_slot].update({
-                                            "lecturer": lecturer,
-                                            "module": module,
-                                            "room": room,
-                                        })
-                                        # print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
-                                        if self.data.available_rooms_dict[(day, time_slot)].count(room["room_id"]):
-                                            self.data.available_rooms_dict[(day, time_slot)].remove(room["room_id"])
-        
-            return solution
-        else:
-            # print(solver.ResponseStats())
-            print("No feasible solution found.")
-            return None

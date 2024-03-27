@@ -131,8 +131,6 @@ class TablePrinter():
                         words.append(
                             len(slot["lecturer"]["lecturer_name"])
                             + len(slot["module"]["module_id"])
-                            + len(slot["position"])
-                            + len(slot["block"])
                         )
                     except KeyError:
                         pass
