@@ -19,10 +19,17 @@ class Solver():
         for lecturer in self.data.lecturers:
             for day in self.data.days:
                 for time_slot, bit in enumerate(lecturer[day]):
-                    # print(time_slot, bit)
-                    self.model.AddImplication(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
-                        bit == "1"
-                        )
+
+                    # self.model.AddImplication(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
+                    #     bit == "1"
+                    #     )
+                    
+                    if bit == "1":
+                        self.model.Add(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]
+                            == 1)
+                    else:
+                        self.model.Add(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]
+                            == 0)
 
     def constraintCorrectLecturer(self):
         """
@@ -31,9 +38,12 @@ class Solver():
         self.correctLecturer = self.BoolVarGenObj.generateCorrectLecturer()
         for lecturer in self.data.lecturers:
             for module in self.data.modules:
+                
                 self.model.AddImplication(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
                     lecturer["lecturer_id"] in module["lecturer_id"]
                     )
+                
+                
 
     def constraintCorrectSemester(self):
         """
@@ -159,10 +169,10 @@ class Solver():
                     for time_slot in self.data.time_slots:
                         self.solution[semester][day].update({time_slot: {}})
                         for lecturer in self.data.lecturers:
+                            # print(self.CPsolver.Value(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]))
                             for module in self.data.modules:
                                 for room in self.data.rooms:
 
-                                    # print(self.CPsolver.Value(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]))
                                     
                                     if (
                                             self.CPsolver.Value(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)])

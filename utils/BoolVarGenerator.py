@@ -8,6 +8,20 @@ class BoolVarGenerator():
         self.model = model
         self.data = data
     
+    # def generateHasTimeBools(self):
+    #     self.hasTimeBools = {}
+    #     for lecturer in self.data.lecturers:
+    #         for day in self.data.days:
+    #             for time_slot, bit in enumerate(lecturer[day]):
+    #                 self.hasTimeBools[(
+    #                     self.data.lecturers_idx[lecturer["lecturer_id"]],
+    #                     self.data.days_idx[day],
+    #                     time_slot,
+    #                     bit
+    #                 )] = self.model.
+    #                     f'{lecturer["lecturer_id"]}_{day}_{time_slot}'
+    #                 )
+    
     def generateHasTime(self):
         self.hasTime = {}
         for lecturer in self.data.lecturers:
