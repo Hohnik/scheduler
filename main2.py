@@ -15,7 +15,6 @@ def main():
 
     # pprint.pprint(solution)
     return
-    
     if solution:
         print("Printing solution as Timetable...")
         printer = TablePrinter()
@@ -28,6 +27,10 @@ def run_model():
     SolverObj = Solver()
     
     SolverObj.addConstraints()
+    
+    pprint.pprint(SolverObj.model.ModelStats())
+    print()
+    
     SolverObj.solve()
     
     pprint.pprint(SolverObj.model.ModelStats())
@@ -40,6 +43,8 @@ def run_model():
         f"Conflicts:{SolverObj.CPsolver.NumConflicts()}",
         sep="\n",
     )
+    
+    return
     
     solution = SolverObj.retrieve_solution()
     

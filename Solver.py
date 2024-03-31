@@ -39,11 +39,16 @@ class Solver():
         for lecturer in self.data.lecturers:
             for module in self.data.modules:
                 
-                self.model.AddImplication(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
-                    lecturer["lecturer_id"] in module["lecturer_id"]
-                    )
+                # self.model.AddImplication(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
+                #     lecturer["lecturer_id"] in module["lecturer_id"]
+                #     )
                 
-                
+                if lecturer["lecturer_id"] in module["lecturer_id"]:
+                    self.model.Add(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])]
+                        == 1)
+                else:
+                    self.model.Add(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])]
+                        == 0)
 
     def constraintCorrectSemester(self):
         """
@@ -52,9 +57,17 @@ class Solver():
         self.correctSemester = self.BoolVarGenObj.generateCorrectSemester()
         for module in self.data.modules:
             for semester in self.data.semesters:
-                self.model.AddImplication(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])],
-                    semester == module["semester"]
-                    )
+                
+                # self.model.AddImplication(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])],
+                #     semester == module["semester"]
+                #     )
+                
+                if semester == module["semester"]:
+                    self.model.Add(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])]
+                        == 1)
+                else:
+                    self.model.Add(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])]
+                        == 0)
 
     def constraintfittingRoom(self):
         """
@@ -63,12 +76,20 @@ class Solver():
         self.fittingRoom = self.BoolVarGenObj.generateFittingRoom()
         for module in self.data.modules:
             for room in self.data.rooms:
-                self.model.AddImplication(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
-                    room["capacity"] >= module["participants"]
-                    )
-                self.model.AddImplication(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
-                    module["module_id"][0] == room["room_type"]
-                )
+                
+                # self.model.AddImplication(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
+                #     room["capacity"] >= module["participants"]
+                #     )
+                # self.model.AddImplication(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
+                #     module["module_id"][0] == room["room_type"]
+                # )
+                
+                if int(room["capacity"]) >= int(module["participants"]) and module["module_id"][0] == room["room_type"]:
+                    self.model.Add(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
+                        == 1)
+                else:
+                    self.model.Add(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
+                        == 0)
 
     def constraintOneModulePerRoom(self):
         """
@@ -152,7 +173,7 @@ class Solver():
         self.constraintOneModulePerLecturer()
         self.constraintOneModulePerSemester()
         self.constraintCorrectSWS()
-        # self.constraintCombine()
+        self.constraintCombine()
 
     def solve(self):
         self.CPsolver = CpSolver()
