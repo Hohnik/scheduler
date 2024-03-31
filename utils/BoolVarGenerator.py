@@ -18,7 +18,7 @@ class BoolVarGenerator():
                         self.data.days_idx[day],
                         time_slot
                     )] = self.model.NewBoolVar(
-                        f'({lecturer["lecturer_id"]}, {day}, {time_slot})'
+                        f'{lecturer["lecturer_id"]}_{day}_{time_slot}'
                     )
         return self.hasTime
 
@@ -30,7 +30,7 @@ class BoolVarGenerator():
                     self.data.lecturers_idx[lecturer["lecturer_id"]],
                     self.data.modules_idx[module["module_id"]]
                 )] = self.model.NewBoolVar(
-                    f'({lecturer["lecturer_id"]}, {module["module_id"]})'
+                    f'{lecturer["lecturer_id"]}_{module["module_id"]}'
                 )
         return self.correctLecturer
 
@@ -42,7 +42,7 @@ class BoolVarGenerator():
                     self.data.modules_idx[module["module_id"]],
                     self.data.semesters_idx[semester]
                 )] = self.model.NewBoolVar(
-                    f'({module["module_id"]}, {semester})'
+                    f'{module["module_id"]}_{semester}'
                 )
         return self.correctSemester
 
@@ -54,7 +54,7 @@ class BoolVarGenerator():
                     self.data.modules_idx[module["module_id"]],
                     self.data.rooms_idx[room["room_id"]],
                 )] = self.model.NewBoolVar(
-                    f'({module["module_id"]}, {room["room_id"]})'
+                    f'{module["module_id"]}_{room["room_id"]}'
                 )
         return self.enoughSpace
 
@@ -70,7 +70,7 @@ class BoolVarGenerator():
                             time_slot,
                             self.data.rooms_idx[room["room_id"]]
                         )] = self.model.NewBoolVar(
-                            f'({module["module_id"]}, {day}, {time_slot}, {room["room_id"]})'
+                            f'{module["module_id"]}_{day}_{time_slot}_{room["room_id"]}'
                         )
         return self.oneModulePerRoom
     
@@ -86,7 +86,7 @@ class BoolVarGenerator():
                             self.data.days_idx[day],
                             time_slot
                         )] = self.model.NewBoolVar(
-                            f'({lecturer["lecturer_id"]}, {module["module_id"]}, {day}, {time_slot})'
+                            f'{lecturer["lecturer_id"]}_{module["module_id"]}_{day}_{time_slot}'
                         )
         return self.oneModulePerLecturer
     
@@ -102,7 +102,7 @@ class BoolVarGenerator():
                             self.data.days_idx[day],
                             time_slot
                         )] = self.model.NewBoolVar(
-                            f'({module["module_id"]}, {semester}, {day}, {time_slot})'
+                            f'{module["module_id"]}_{semester}_{day}_{time_slot}'
                         )
         return self.oneModulePerSemester
     
@@ -116,6 +116,7 @@ class BoolVarGenerator():
                         self.data.days_idx[day],
                         time_slot
                     )] = self.model.NewBoolVar(
-                        f'({module["module_id"]}, {day}, {time_slot})'
+                        f'{module["module_id"]}_{day}_{time_slot}'
                     )
         return self.correctSWS
+    

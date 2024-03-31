@@ -2,7 +2,8 @@ import pandas as pd
 
 class Data():
     def __init__(self):
-        self.data = self.load_data_from_database()
+        self.data:dict[str, list[str, dict]] = self.load_data_from_database()
+        
         self.data.update(self.generate_semesters())
         self.data.update(self.generate_days())
         self.data.update(self.generate_time_slots())
@@ -19,12 +20,12 @@ class Data():
         self.available_rooms_dict = self.generate_available_rooms_dic()
         
     def unpack_data(self):
-        self.lecturers = self.data["lecturers"] 
-        self.modules = self.data["modules"] 
-        self.semesters = self.data["semesters"] 
-        self.days = self.data["days"] 
-        self.time_slots = self.data["time_slots"]
-        self.rooms = self.data["rooms"]
+        self.lecturers:list[dict[str, str]] = self.data["lecturers"] 
+        self.modules:list[dict[str, str]] = self.data["modules"] 
+        self.semesters:list[str] = self.data["semesters"] 
+        self.days:list[str] = self.data["days"] 
+        self.time_slots:range = self.data["time_slots"]
+        self.rooms:list[dict[str, str]] = self.data["rooms"]
         
     def unpack_data_idx(self):
         self.lecturers_idx = {lecturer_id: num for num, lecturer_id in enumerate(self.get_lecturer_ids())}
@@ -43,7 +44,7 @@ class Data():
     def get_room_ids(self) -> list[str]:
         return [room["room_id"] for room in self.rooms]
     
-    def load_data_from_database(self) -> dict[str, list[str, dict]]:
+    def load_data_from_database(self) -> dict[str, list[dict]]:
         return {
             "lecturers": self.data_to_dict("db/lecturers.csv"),
             "modules": self.data_to_dict("db/modules.csv"),
@@ -55,7 +56,7 @@ class Data():
             "semesters": sorted(list(set([module.get("semester") for module in self.data.get("modules")])))
         }
     
-    def generate_days(self):
+    def generate_days(self) -> list[str]:
         days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
         result = []
         for day in days:

@@ -11,8 +11,11 @@ from utils.table_printer import TablePrinter
 def main():
     solution = run_model()
 
-    pprint.pprint(solution)
+    # pprint.pprint(solution)
 
+    # pprint.pprint(solution)
+    return
+    
     if solution:
         print("Printing solution as Timetable...")
         printer = TablePrinter()
@@ -21,12 +24,22 @@ def main():
         printer.print_semester_tables()
 
 def run_model():
-
-    model = cp_model.CpModel()
     
-    SolverObj = Solver(model)
+    SolverObj = Solver()
+    
     SolverObj.addConstraints()
     SolverObj.solve()
+    
+    pprint.pprint(SolverObj.model.ModelStats())
+    print()
+    
+    print(
+        f"Status:{SolverObj.CPsolver.StatusName()}",
+        f"Bools:{SolverObj.CPsolver.NumBooleans()}",
+        f"Branches:{SolverObj.CPsolver.NumBranches()}",
+        f"Conflicts:{SolverObj.CPsolver.NumConflicts()}",
+        sep="\n",
+    )
     
     solution = SolverObj.retrieve_solution()
     

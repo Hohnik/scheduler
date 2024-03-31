@@ -91,7 +91,6 @@ def modify_modules(modules:list[dict]) -> list[dict]:
                 lecture_copy["module_id"] = lecture_copy["module_id"] + '_0'
                 modules_new.append(lecture_copy)
                 # modules.remove(lecture)
-    pprint.pprint(modules_new)
     return modules_new
 
 
@@ -237,7 +236,7 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
                             for block in module["block_sizes_dic"]:
                                 for position in calculate_positions(block[0]):
                                     for room in rooms:
-
+                                        
                                         if solver.Value(timetable[(
                                             lecturer_idx[lecturer["lecturer_id"]], 
                                             module_idx[module["module_id"]],

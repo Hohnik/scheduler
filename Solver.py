@@ -1,13 +1,13 @@
 from ortools.sat.python import cp_model
-from ortools.sat.python.cp_model import CpModel, IntVar
+from ortools.sat.python.cp_model import CpModel, CpSolver, IntVar, LinearExpr
 
 from utils.BoolVarGenerator import BoolVarGenerator
 from Data import Data
 
 class Solver():
 
-    def __init__(self, model:CpModel) -> None:
-        self.model = model
+    def __init__(self) -> None:
+        self.model = CpModel()
         self.data = Data()
         self.BoolVarGenObj = BoolVarGenerator(self.model, self.data)
         
@@ -19,6 +19,7 @@ class Solver():
         for lecturer in self.data.lecturers:
             for day in self.data.days:
                 for time_slot, bit in enumerate(lecturer[day]):
+                    # print(time_slot, bit)
                     self.model.AddImplication(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
                         bit == "1"
                         )
@@ -109,10 +110,28 @@ class Solver():
         """
         self.correctSWS = self.BoolVarGenObj.generateCorrectSWS()
         for module in self.data.modules:
-            self.model.Add(cp_model.LinearExpr.Sum([self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
+            self.model.Add(LinearExpr.Sum([self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
             for day in self.data.days
             for time_slot in self.data.time_slots
             ]) == int(module["sws"]))
+
+    def constraintCombine(self):
+        for lecturer in self.data.lecturers:
+            for module in self.data.modules:
+                for semester in self.data.semesters:
+                    for day in self.data.days:
+                        for time_slot in self.data.time_slots:
+                            for room in self.data.rooms:
+                                self.model.AddBoolAnd([
+                                    self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
+                                    self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
+                                    self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])],
+                                    self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
+                                    self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])],
+                                    self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)],
+                                    self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)],
+                                    self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)],
+                                ])
 
     def addConstraints(self):
         self.constraintHasTime()
@@ -123,45 +142,52 @@ class Solver():
         self.constraintOneModulePerLecturer()
         self.constraintOneModulePerSemester()
         self.constraintCorrectSWS()
+        # self.constraintCombine()
 
     def solve(self):
-        self.CPsolver = cp_model.CpSolver()
+        self.CPsolver = CpSolver()
         self.CPstatus = self.CPsolver.Solve(self.model)
         return (self.CPsolver, self.CPstatus)
     
     def retrieve_solution(self):
-        solution:dict[str, dict[str, dict[int, list | str]]] = {}
+        self.solution:dict[str, dict[str, dict[int, list | str]]] = {}
         if self.CPstatus == cp_model.OPTIMAL or self.CPstatus == cp_model.FEASIBLE:
             for semester in self.data.semesters:
-                solution.update({semester: {}})
+                self.solution.update({semester: {}})
                 for day in self.data.days:
-                    solution[semester].update({day: {}})
+                    self.solution[semester].update({day: {}})
                     for time_slot in self.data.time_slots:
-                        solution[semester][day].update({time_slot: {}})
+                        self.solution[semester][day].update({time_slot: {}})
                         for lecturer in self.data.lecturers:
                             for module in self.data.modules:
                                 for room in self.data.rooms:
 
+                                    # print(self.CPsolver.Value(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]))
+                                    
                                     if (
                                             self.CPsolver.Value(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)])
-                                        # and self.CPsolver.Value(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])])
-                                        # and self.CPsolver.Value(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])])
-                                        # and self.CPsolver.Value(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])])
-                                        # and self.CPsolver.Value(self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])])
-                                        # and self.CPsolver.Value(self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)])
-                                        # and self.CPsolver.Value(self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)])
-                                        # and self.CPsolver.Value(self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)])
+                                        and self.CPsolver.Value(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])])
+                                        and self.CPsolver.Value(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])])
+                                        and self.CPsolver.Value(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])])
+                                        and self.CPsolver.Value(self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])])
+                                        and self.CPsolver.Value(self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)])
+                                        and self.CPsolver.Value(self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)])
+                                        and self.CPsolver.Value(self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)])
                                     ):
-                                        solution[semester][day][time_slot].update({
+                                        self.solution[semester][day][time_slot].update({
                                             "lecturer": lecturer,
                                             "module": module,
                                             "room": room,
                                         })
-                                        # print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
+                                        
                                         if self.data.available_rooms_dict[(day, time_slot)].count(room["room_id"]):
                                             self.data.available_rooms_dict[(day, time_slot)].remove(room["room_id"])
+                                    
+                                    # self.solution[semester][day][time_slot].update({
+                                    #     (lecturer["lecturer_id"], module["module_id"], room["room_id"]): 1
+                                    # })
         
-            return solution
+            return self.solution
         else:
             # print(solver.ResponseStats())
             print("No feasible solution found.")
