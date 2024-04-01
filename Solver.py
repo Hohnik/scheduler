@@ -6,8 +6,8 @@ from Data import Data
 
 class Solver():
 
-    def __init__(self) -> None:
-        self.model = CpModel()
+    def __init__(self, model) -> None:
+        self.model = model
         self.data = Data()
         self.BoolVarGenObj = BoolVarGenerator(self.model, self.data)
         
@@ -131,7 +131,7 @@ class Solver():
         for semester in self.data.semesters:
             for day in self.data.days:
                 for time_slot in self.data.time_slots:
-                    self.model.AddAtMostOne(self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)]
+                    self.model.AddAtMostOne(self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester], self.data.days_idx[day], time_slot)]
                     for module in self.data.modules
                     )
 
@@ -153,7 +153,7 @@ class Solver():
                     for day in self.data.days:
                         for time_slot in self.data.time_slots:
                             for room in self.data.rooms:
-                                self.model.AddBoolAnd([
+                                self.model.Add(LinearExpr.Sum([
                                     self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
                                     self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
                                     self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])],
@@ -162,7 +162,7 @@ class Solver():
                                     self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)],
                                     self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)],
                                     self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)],
-                                ])
+                                ]) >= 1)
 
     def addConstraints(self):
         self.constraintHasTime()
@@ -173,11 +173,18 @@ class Solver():
         self.constraintOneModulePerLecturer()
         self.constraintOneModulePerSemester()
         self.constraintCorrectSWS()
-        self.constraintCombine()
+        
+        # self.constraintCombine()
 
     def solve(self):
+        
+        # self.CPsolver = CpSolver()
+        # self.solution_printer = SolutionPrinter()
+        # self.CPstatus = self.CPsolver.Solve(self.model, self.solution_printer)
+        
         self.CPsolver = CpSolver()
         self.CPstatus = self.CPsolver.Solve(self.model)
+
         return (self.CPsolver, self.CPstatus)
     
     def retrieve_solution(self):
@@ -223,3 +230,16 @@ class Solver():
             # print(solver.ResponseStats())
             print("No feasible solution found.")
             return None
+        
+
+class SolutionPrinter(cp_model.CpSolverSolutionCallback):
+        
+    counter = 0
+        
+    def on_solution_callback(self) -> None:
+        
+        if self.counter > 10:
+            return
+        self.counter += 1
+        print("SolutionCallback")
+        

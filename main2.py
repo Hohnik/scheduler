@@ -24,13 +24,10 @@ def main():
 
 def run_model():
     
-    SolverObj = Solver()
+    model = CpModel()
     
+    SolverObj = Solver(model)
     SolverObj.addConstraints()
-    
-    pprint.pprint(SolverObj.model.ModelStats())
-    print()
-    
     SolverObj.solve()
     
     pprint.pprint(SolverObj.model.ModelStats())
