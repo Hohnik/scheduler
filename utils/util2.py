@@ -1,4 +1,5 @@
 import pprint
+import time
 import pandas as pd
 from ortools.sat.python import cp_model
 
@@ -101,7 +102,7 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
     room_idx  = data_idx["rooms"]
 
     print("Retrieving solution...")
-    start_time = time()
+    start_time = time.time()
     solution:dict[str, dict[str, dict[int, list | str]]] = {}
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         for semester in semesters:

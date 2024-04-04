@@ -14,7 +14,7 @@ class Data():
         self.unpack_data_idx()
         
         self.add_module_course()
-        self.generate_lecturer_skipped_time_slots()
+        # self.generate_lecturer_skipped_time_slots()
         self.generate_module_session_blocks()
         
         self.available_rooms_dict = self.generate_available_rooms_dic()
