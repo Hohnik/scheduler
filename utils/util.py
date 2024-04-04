@@ -206,18 +206,18 @@ def solve_model(model, vars):
 def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status):
     lecturers = data["lecturers"]
     modules = data["modules"]
-    semesters  = data["semesters"]
-    days  = data["days"]
-    time_slots  = data["time_slots"]
-    # positions  = data["positions"]
-    rooms  = data["rooms"]
+    semesters = data["semesters"]
+    days = data["days"]
+    time_slots = data["time_slots"]
+    # positions = data["positions"]
+    rooms = data["rooms"]
     
     lecturer_idx = data_idx["lecturers"]
     module_idx = data_idx["modules"]
-    semester_idx  = data_idx["semesters"]
-    day_idx  = data_idx["days"]
-    position_idx  = data_idx["positions"]
-    room_idx  = data_idx["rooms"]
+    semester_idx = data_idx["semesters"]
+    day_idx = data_idx["days"]
+    position_idx = data_idx["positions"]
+    room_idx = data_idx["rooms"]
 
     print("Retrieving solution...")
     start_time = time()
