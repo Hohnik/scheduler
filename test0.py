@@ -84,8 +84,8 @@ def main() -> None:
         )
     )
 
-    pprint.pprint()
     # Creates the solver and solve.
+    # pprint.pprint()
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
