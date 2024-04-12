@@ -27,9 +27,6 @@ from time import time
 # HEURISTIC for each module for each room, Optimise: just over half full rooms (normal distribution, slightly right-skewed)
 
 def main():
-    print()
-    # gld.generate_data()
-    # gmd.create_data()
     start_time = time()
     result_object = run_model()
     end_time = time()
@@ -501,9 +498,9 @@ def run_model():
     print()
 
     print("Finished Calculating Constraints.")
-    pprint.pprint(model.ModelStats())
-    print(model.__dict__)
-    pprint.pprint(model.ModelStats())
+    # pprint.pprint(model.ModelStats())
+    # print(model.__dict__)
+    # pprint.pprint(model.ModelStats())
     solver, status = solve_model(model, timetable)
     return retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status)
 

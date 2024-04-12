@@ -74,7 +74,7 @@ class TablePrinter():
             for day in self.days:
                 try:
                     slot = self.solution[semester][day][time_slot]
-                    module = f'{slot["module"]["module_id"]}'
+                    # module = f'{slot["module"]["module_id"]}'
                     lecturer = f'{slot["lecturer"]["lecturer_name"]}'
                     room = f'{slot["room"]["room_id"]}'
                     position = f'{slot["position"]}'
