@@ -96,6 +96,7 @@ def main() -> None:
 
     # Statistics.
     print("\nStatistics")
+    print(f"  - bools: {solver.NumBooleans()}")
     print(f"  - conflicts: {solver.NumConflicts()}")
     print(f"  - branches : {solver.NumBranches()}")
     print(f"  - wall time: {solver.WallTime()}s")
@@ -103,5 +104,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # main()
-    data = Data()
+    main()
+    # data = Data()
