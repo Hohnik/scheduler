@@ -10,7 +10,6 @@ class Solver():
         self.model = CpModel()
         self.data = Data()
         self.BoolVarGenObj = BoolVarGenerator(self.model, self.data)
-        self.counter = 0
         
     def constraintHasTime(self):
         """
@@ -22,20 +21,9 @@ class Solver():
             for day in self.data.days:
                 for time_slot, bit in enumerate(lecturer[day]):
 
-                    # self.model.AddImplication(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)],
-                    #     bit == "1"
-                    #     )
-                    
-                    if bit == "1":
-                        self.model.Add(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]
-                            == 1)
-                        self.counter += 1
-                        print(self.counter)
-                    else:
-                        self.model.Add(self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]
-                            == 0)
-                        self.counter += 1
-        print(self.counter)
+                    self.model.AddImplication(bit == "1",
+                        self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]
+                        )
 
     def constraintCorrectLecturer(self):
         """
@@ -46,20 +34,9 @@ class Solver():
         for lecturer in self.data.lecturers:
             for module in self.data.modules:
                 
-                # self.model.AddImplication(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])],
-                #     lecturer["lecturer_id"] in module["lecturer_id"]
-                #     )
-                
-                if lecturer["lecturer_id"] in module["lecturer_id"]:
-                    self.model.Add(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])]
-                        == 1)
-                    self.counter += 1
-                    print(self.counter)
-                else:
-                    self.model.Add(self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])]
-                        == 0)
-                    self.counter += 1
-        print(self.counter)
+                self.model.AddImplication(lecturer["lecturer_id"] in module["lecturer_id"],
+                    self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])]
+                    )
 
     def constraintCorrectSemester(self):
         """
@@ -70,20 +47,9 @@ class Solver():
         for module in self.data.modules:
             for semester in self.data.semesters:
                 
-                # self.model.AddImplication(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])],
-                #     semester == module["semester"]
-                #     )
-                
-                if semester == module["semester"]:
-                    self.model.Add(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])]
-                        == 1)
-                    self.counter += 1
-                    print(self.counter)
-                else:
-                    self.model.Add(self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])]
-                        == 0)
-                    self.counter += 1
-        print(self.counter)
+                self.model.AddImplication(semester == module["semester"],
+                    self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])]
+                    )
 
     def constraintFittingRoom(self):
         """
@@ -94,23 +60,12 @@ class Solver():
         for module in self.data.modules:
             for room in self.data.rooms:
                 
-                # self.model.AddImplication(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
-                #     room["capacity"] >= module["participants"]
-                #     )
-                # self.model.AddImplication(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])],
-                #     module["module_id"][0] == room["room_type"]
-                # )
-                
-                if int(room["capacity"]) >= int(module["participants"]) and module["module_id"][0] == room["room_type"]:
-                    self.model.Add(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
-                        == 1)
-                    self.counter += 1
-                    print(self.counter)
-                else:
-                    self.model.Add(self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
-                        == 0)
-                    self.counter += 1
-        print(self.counter)
+                self.model.AddImplication(int(room["capacity"]) >= int(module["participants"]),
+                    self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
+                )
+                self.model.AddImplication(module["module_id"][0] == room["room_type"],
+                    self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
+                )
 
     def constraintOneModulePerRoom(self):
         """
@@ -124,15 +79,10 @@ class Solver():
                     self.model.AddAtMostOne(self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])]
                     for module in self.data.modules
                     )
-                    self.counter += 1
-                    print(self.counter)
                 for module in self.data.modules:
                     self.model.AddAtMostOne(self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])]
                     for room in self.data.rooms
                     )
-                    self.counter += 1
-                    print(self.counter)
-        print(self.counter)
 
     def constraintOneModulePerLecturer(self):
         """
@@ -146,15 +96,10 @@ class Solver():
                     self.model.AddAtMostOne(self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
                     for module in self.data.modules
                     )
-                    self.counter += 1
-                    print(self.counter)
                 for module in self.data.modules:
                     self.model.AddAtMostOne(self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
                     for lecturer in self.data.lecturers
                     )
-                    self.counter += 1
-                    print(self.counter)
-        print(self.counter)
 
     def constraintOneModulePerSemester(self):
         """
@@ -168,9 +113,6 @@ class Solver():
                     self.model.AddAtMostOne(self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester], self.data.days_idx[day], time_slot)]
                     for module in self.data.modules
                     )
-                    self.counter += 1
-                    print(self.counter)
-        print(self.counter)
 
     def constraintCorrectSWS(self):
         """
@@ -183,9 +125,6 @@ class Solver():
             for day in self.data.days
             for time_slot in self.data.time_slots
             ]) == int(module["sws"]))
-            self.counter += 1
-            print(self.counter)
-        print(self.counter)
 
     def constraintCombine(self):
         
@@ -195,33 +134,32 @@ class Solver():
                         self.model.Add(LinearExpr.Sum([
                             self.correctSWS[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
                         for module in self.data.modules
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.hasTime[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.days_idx[day], time_slot)]
                         for lecturer in self.data.lecturers
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.correctLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]])]
                         for lecturer in self.data.lecturers
                         for module in self.data.modules
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.correctSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[semester])]
                         for module in self.data.modules
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.fittingRoom[(self.data.modules_idx[module["module_id"]], self.data.rooms_idx[room["room_id"]])]
                         for module in self.data.modules
                         for room in self.data.rooms
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.oneModulePerRoom[(self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot, self.data.rooms_idx[room["room_id"]])]
                         for module in self.data.modules
                         for room in self.data.rooms
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.oneModulePerLecturer[(self.data.lecturers_idx[lecturer["lecturer_id"]], self.data.modules_idx[module["module_id"]], self.data.days_idx[day], time_slot)]
                         for lecturer in self.data.lecturers
                         for module in self.data.modules
-                        ] + [
+                        ]) + LinearExpr.Sum([
                             self.oneModulePerSemester[(self.data.modules_idx[module["module_id"]], self.data.semesters_idx[module["semester"]], self.data.days_idx[day], time_slot)]
                         for module in self.data.modules
-                        ]
-                        ) <= 8)
+                        ]) <= 8)
 
     def addVariables(self):
         self.hasTime = self.BoolVarGenObj.generateHasTime()
@@ -317,8 +255,6 @@ class SolutionPrinter(cp_model.CpSolverSolutionCallback):
             print(f"Stopping after {self.max_solutions} solutions.")
             pass
             
-        if self.counter > 100:
             return
-        self.counter += 1
         print("SolutionCallback")
         

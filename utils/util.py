@@ -184,6 +184,7 @@ def get_room_ids(rooms:list[dict]) -> list[str]:
 
 def solve_model(model, vars):
     solver = cp_model.CpSolver()
+    solver.parameters.log_search_progress = True
     print("Solving...")
     start_time = time()
     # solution_printer = SolutionPrinter(list(vars.values()))

@@ -4,7 +4,7 @@ from ortools.sat.python.cp_model import IntVar
 
 from utils.util2 import *
 from utils.BoolVarGenerator import *
-from Solver import Solver
+from Solver2 import Solver
 from utils.table_printer import TablePrinter
 
 
@@ -27,10 +27,12 @@ def run_model():
     SolverObj = Solver()
     SolverObj.addVariables()
     SolverObj.addConstraints()
+    pprint.pprint(SolverObj.model.ModelStats())
+    print(SolverObj.model.__dict__)
     SolverObj.solve()
     
     pprint.pprint(SolverObj.model.ModelStats())
-    print(SolverObj.model.__dict__)
+    # print(SolverObj.model.__dict__)
     print()
     
     print(

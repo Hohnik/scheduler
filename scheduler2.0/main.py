@@ -26,7 +26,7 @@ def main() -> None:
                     for l in all_lecturers:
                         if (
                             data.lecturers[data.days[d]][l][t] == "1"
-                            and data.lecturers["lecturer_id"][l] in data.modules["lecturer_id"]
+                            and data.lecturers["lecturer_id"][l] == data.modules["lecturer_id"][m]
                             and data.semesters[s] == data.modules["semester"][m]
                         ):
                             bools[(s, d, t, m, l)] = model.NewBoolVar(
@@ -35,15 +35,14 @@ def main() -> None:
 
     constraint = Constraint(bools, model, data)
     constraint.oneModulePerTimeslot()
+    constraint.correctSWS()
+    constraint.oneModulePerLecturerPerTimeslot()
 
+    # TODO: implement constraint_consecutive_timeslots
 
-    # TODO: a lecturer cannot be scheduled for two modules at the same time
-
-    # TODO: a module is placed exactly sws's times
-
-    # TODO: lectures that have more than one lecturer are not handled yet
-
-    # TODO: blockplacements not MVP worthy (felix)
+    # TODO: lectures that have more than one lecturer are not handled yet (Not MVP worthy)
+    
+    # TODO: implement create_practice_module function (not MVP worthy)
 
     # Apply heuristic
     preffered_placement = []
