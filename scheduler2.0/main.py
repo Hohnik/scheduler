@@ -39,6 +39,8 @@ def main() -> None:
     constraint.oneModulePerLecturerPerTimeslot()
 
     # TODO: implement constraint_consecutive_timeslots
+    # Wenn 2er-block: stunde vorher nicht mahte --impliziert--> nächste und übernächste stunde ist mathe
+    # Hier muss noch gecheckt werden ob wir in einen overflow laufen würden
 
     # TODO: lectures that have more than one lecturer are not handled yet (Not MVP worthy)
     
