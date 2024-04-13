@@ -70,7 +70,7 @@ def main() -> None:
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
 
-    if status == cp_model.OPTIMAL:
+    if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print("Solution:")
         for s in all_semesters:
             for d in all_days:
@@ -94,6 +94,7 @@ def main() -> None:
         )
     else:
         print("No optimal solution found !")
+        print(solver.StatusName())
 
     # Statistics.
     print("\nStatistics")
