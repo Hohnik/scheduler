@@ -1,29 +1,23 @@
 import pprint
 from ortools.sat.python import cp_model
 
+from services.Constraint import Constraint
 from services.Data import Data
 
 
 def main() -> None:
     data = Data()
-    num_semester = len(data.semesters)  # 1
-    num_days = len(data.days)  # 5
-    num_slots = len(data.timeslots)  # 10
-    num_lecturers = len(data.lecturers)  # 9
-    num_modules = len(data.modules)  # 15
-
-    all_semesters = range(num_semester)
-    all_days = range(num_days)
-    all_timeslots = range(num_slots)
-    all_lecturers = range(num_lecturers)
-    all_modules = range(num_modules)
-
+    all_semesters = range(len(data.semesters)) # 1
+    all_days = range(len(data.days)) # 5
+    all_timeslots = range(len(data.timeslots)) # 10
+    all_lecturers = range(len(data.lecturers)) # 9
+    all_modules = range(len(data.modules)) # 15
+    all_blocks = range(len(data.blocks)) # ???
 
     # Creates the model.
     model = cp_model.CpModel()
-
-    # Creates slot variables.
-    # slots[(n, d, s)]: lecturer 'n' works slot 's' on day 'd'.
+    
+    #Create variables
     bools = {}
     for s in all_semesters:
         for d in all_days:
@@ -39,16 +33,9 @@ def main() -> None:
                                 f"course_s{s}_d{d}_t{t}_m{m}_l{l}"
                             )
 
-    # Each slot is assigned to exactly one lecturer, module combo.
-    for s in all_semesters:
-        for d in all_days:
-            for t in all_timeslots:
-                combo = []
-                for m in all_modules:
-                    for l in all_lecturers:
-                        if (s, d, t, m, l) in bools.keys():
-                            combo.append(bools[(s, d, t, m, l)])
-                model.AddAtMostOne(combo)
+    constraint = Constraint(bools, model, data)
+    constraint.oneModulePerTimeslot()
+
 
     # TODO: a lecturer cannot be scheduled for two modules at the same time
 
@@ -116,4 +103,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    data = Data()
