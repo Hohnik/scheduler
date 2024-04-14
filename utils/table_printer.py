@@ -18,7 +18,6 @@ def main():
     print("Here a little test table:")
     printer = TablePrinter()
     printer.set_solution(data)
-    printer.printed_data()
     printer.print_semester_tables()
 
 class TablePrinter():
@@ -74,20 +73,16 @@ class TablePrinter():
             for day in self.days:
                 try:
                     slot = self.solution[semester][day][time_slot]
-                    # module = f'{slot["module"]["module_id"]}'
+                    module = f'{slot["module"]["module_id"]}'
                     lecturer = f'{slot["lecturer"]["lecturer_name"]}'
-                    room = f'{slot["room"]["room_id"]}'
-                    position = f'{slot["position"]}'
-                    block = f'{slot["module"]["block_sizes_dic"][slot["block"]]}'
-                    data_objects = [module, lecturer, room, position, block] # NOTE Print these objects in one line
+                    data_objects = [module, lecturer] # NOTE Print these objects in one line
 
                     if self.print_rows:
                         module_fields.append(f'{module:^{self.col_width}}')
                         lecturer_fields.append(f'{lecturer:^{self.col_width}}')
-                        room_fields.append(f'{room:^{self.col_width}}')
                     else:
                         # text = ", ".join(data_objects)
-                        text = f'{position}, {block}, {module}, {lecturer}'
+                        text = f'{module}, {lecturer}'
                         joined_fields.append(f'{text:<{self.col_width}}')
 
                 except KeyError:
@@ -127,7 +122,7 @@ class TablePrinter():
             for day in semester.values():
                 for slot in day.values():
                     # pprint.pprint(slot)
-                    try: 
+                    try:
                         words.append(
                             len(slot["lecturer"]["lecturer_name"])
                             + len(slot["module"]["module_id"])
@@ -135,7 +130,7 @@ class TablePrinter():
                     except KeyError:
                         pass
         return max(words) + spaces
-    
+
 
     def _calculate_max_slot(self):
         result = 0
@@ -145,8 +140,9 @@ class TablePrinter():
                 result =  max(current_max, result)
         return result
 
-    def set_solution(self, solution: dict[str, dict[str, dict[int, list | str]]]):
+    def set_solution(self, solution: dict):
         self.solution = solution
+        print("sol:", solution)
         self.render_lines(solution)
 
     def render_lines(self, solution):

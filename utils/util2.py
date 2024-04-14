@@ -18,7 +18,7 @@ def generate_days(lecturers):
             continue
     return result
 
-def modify_modules(modules:list[dict]) -> None:
+def modify_modules(modules:list[dict]) :
     modules_new = []
     for module_1 in modules:
         # print(module_1['module_name'])
@@ -26,7 +26,7 @@ def modify_modules(modules:list[dict]) -> None:
             if (module_1["module_id"][1:] == module_2["module_id"][1:]) and (module_1["module_id"][0] == "p") and module_2["module_id"][0] == "l":
                 practice, lecture = module_1, module_2
                 practice_count = (int(lecture["participants"]) // int(practice["max_participants"])) + 1
-                
+
                 # pprint.pprint(f'{module_1["module_id"]}: {practice_count}')
                 remaining_participants = int(lecture["participants"])
 
@@ -46,7 +46,7 @@ def modify_modules(modules:list[dict]) -> None:
                 modules_new.append(lecture_copy)
         # if module_1["module_id"][0] == 'l':
         #     modules_new.append(module_1)
-    
+
     return modules_new
 
 def get_lecturer_ids(lecturers:list[dict]) -> list[str]:
@@ -82,7 +82,7 @@ def calculate_session_blocks(sws:str) -> dict[tuple[int, int], int]:
             num += 1
             key_1 += 1
             leftover_sws -= 1
-    
+
     return block_sizes_dic
 
 def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, solver, status):
@@ -93,7 +93,7 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
     time_slots  = data["time_slots"]
     # positions  = data["positions"]
     rooms  = data["rooms"]
-    
+
     lecturer_idx = data_idx["lecturers"]
     module_idx = data_idx["modules"]
     semester_idx  = data_idx["semesters"]
@@ -120,10 +120,10 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
                                     for room in rooms:
 
                                         if solver.Value(timetable[(
-                                            lecturer_idx[lecturer["lecturer_id"]], 
+                                            lecturer_idx[lecturer["lecturer_id"]],
                                             module_idx[module["module_id"]],
-                                            semester_idx[semester], 
-                                            day_idx[day], 
+                                            semester_idx[semester],
+                                            day_idx[day],
                                             time_slot,
                                             position_idx[position],
                                             module["block_sizes_dic"][block],
@@ -139,16 +139,15 @@ def retrieve_solution(data, data_idx, model, timetable, available_rooms_dic, sol
                                             # print(f'{module["module_id"]}, {time_slot}, {position}, {room["room_id"]}, {lecturer["lecturer_name"]}')
                                             if available_rooms_dic[(day, time_slot)].count(room["room_id"]):
                                                 available_rooms_dic[(day, time_slot)].remove(room["room_id"])
-    
+
         print("Solution retrieved.")
         end_time = time()
         print(f"{round(end_time - start_time, 2)} secs")
         print()
-    
+
         print("RoomsAvailable: ", available_rooms(available_rooms_dic, days, time_slots))
         return solution
     else:
         # print(solver.ResponseStats())
         print("No feasible solution found.")
         return None
-    
