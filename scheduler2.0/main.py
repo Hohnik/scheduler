@@ -1,8 +1,10 @@
 import pprint
+from sys import modules
 from ortools.sat.python import cp_model
 
 from services.Constraint import Constraint
 from services.Data import Data
+from services.Printer import Printer
 
 
 def main() -> None:
@@ -12,7 +14,6 @@ def main() -> None:
     all_timeslots = range(len(data.timeslots))  # 10
     all_lecturers = range(len(data.lecturers))  # 9
     all_modules = range(len(data.modules))  # 15
-    all_blocks = range(len(data.blocks))  # ???
 
     # Creates the model.
     model = cp_model.CpModel()
@@ -34,9 +35,10 @@ def main() -> None:
                             )
 
     constraint = Constraint(bools, model, data)
-    constraint.oneModulePerTimeslot()
-    constraint.correctSWS()
-    constraint.oneModulePerLecturerPerTimeslot()
+    constraint.one_module_per_timeslot()
+    constraint.correct_sws()
+    constraint.one_module_per_lecturer_per_timeslot()
+    constraint.consecutive_timeslots()
 
     # TODO: implement constraint_consecutive_timeslots
     # Wenn 2er-block: stunde vorher nicht mahte --impliziert--> nächste und übernächste stunde ist mathe
@@ -69,29 +71,49 @@ def main() -> None:
     # Creates the solver and solve.
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
+    solution = {}
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         print("Solution:")
         for s in all_semesters:
+            print(data.semesters[s].capitalize())
+            solution.update({data.semesters[s]: {}})
             for d in all_days:
-                print(data.days[d].capitalize())
+                solution[data.semesters[s]].update({data.days[d]: {}})
+                print(" ", data.days[d].capitalize())
                 for t in all_timeslots:
+                    # solution[data.semesters[s]][data.days[d]].update({data.timeslots[t]: {}})
+                    solution[data.semesters[s]][data.days[d]][t] = {}
                     for m in all_modules:
                         for l in all_lecturers:
                             try:
                                 if solver.Value(bools[(s, d, t, m, l)]) == 1:
                                     print(
                                         " ",
+                                        " ",
                                         t,
                                         data.lecturers["lecturer_name"][l],
                                         data.modules["module_id"][m],
+                                        # data.modules["module_name"][m],
                                     )
+                                    solution[data.semesters[s]][data.days[d]][t] = {
+                                                    "lecturer": data.lecturers["lecturer_name"][l],
+                                                    "module": data.modules["module_id"][m]
+                                    }
+
                             except KeyError:
                                 pass
                 print()
         print(
             f"h = {solver.ObjectiveValue()}",
         )
+        # Printer
+        # printer = Printer()
+        # printer.set_solution(solution)
+        # printer.print_lecturer_tables()
+
+
+
     else:
         print("No optimal solution found !")
         print(solver.StatusName())

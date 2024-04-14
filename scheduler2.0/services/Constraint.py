@@ -16,7 +16,7 @@ class Constraint:
         self.all_lecturers = range(len(data.lecturers))
         self.all_modules = range(len(data.modules))
 
-    def oneModulePerTimeslot(self):
+    def one_module_per_timeslot(self):
         """
         Each slot is assigned to exactly one lecturer-module combo.
         """
@@ -30,7 +30,7 @@ class Constraint:
                                 combo.append(self.bools[(s, d, t, m, l)])
                     self.model.AddAtMostOne(combo)
                     
-    def correctSWS(self):
+    def correct_sws(self):
         """
         Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
         """
@@ -44,7 +44,7 @@ class Constraint:
                                 combo.append(self.bools[(s, d, t, m, l)])
             self.model.Add(LinearExpr.Sum(combo) == int(self.data.modules["sws"][m]))
 
-    def oneModulePerLecturerPerTimeslot(self):
+    def one_module_per_lecturer_per_timeslot(self):
         """
         A lecturer cannot be scheduled for two modules at the same time
         """
@@ -57,3 +57,51 @@ class Constraint:
                             if (s, d, t, m, l) in self.bools.keys():
                                 combo.append(self.bools[(s, d, t, m, l)])
                     self.model.AddAtMostOne(combo)
+
+    def consecutive_timeslots(self):
+        """
+        # TODO: implement constraint_consecutive_timeslots
+        # Wenn 2er-block: stunde vorher nicht mahte --impliziert--> nächste und übernächste stunde ist mathe
+        # Hier muss noch gecheckt werden ob wir in einen overflow laufen würden
+        """
+        for d in self.all_days:
+            for t in self.all_timeslots:
+                for l in self.all_lecturers:
+                    combo = []
+                    for m in self.all_modules:
+                        for s in self.all_semesters:
+                            if (s, d, t, m, l) in self.bools.keys():
+                                combo.append(self.bools[(s, d, t, m, l)])
+                    self.model.AddAtMostOne(combo)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

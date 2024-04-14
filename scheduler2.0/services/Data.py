@@ -23,7 +23,3 @@ class Data:
                 counter += 1
         self.blocks = pd.DataFrame(self.blocks)
         # print(self.blocks)
-
-
-if __name__ == "__main__":
-    data = Data()

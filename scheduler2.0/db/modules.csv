@@ -2,13 +2,41 @@ module_id,semester,sws,max_participants,lecturer_id,module_name
 KI210,2KI,2,49,0,Data Science II
 KI211,2KI,2,20,0,Data Science II Praktikum (A)
 KI212,2KI,2,20,0,Data Science II Praktikum (B)
+KI213,2KI,2,20,0,Data Science II Praktikum (C)
 KI220,2KI,4,38,4,Mathematik II
 KI221,2KI,2,20,4,Mathematik II Praktikum (A)
 KI222,2KI,2,20,4,Mathematik II Praktikum (B)
 KI230,2KI,4,46,3,Programmieren II
 KI231,2KI,2,20,3,Programmieren II Praktikum (A)
 KI232,2KI,2,20,3,Programmieren II Praktikum (B)
+KI233,2KI,2,20,3,Programmieren II Praktikum (C)
 KI240,2KI,2,32,3,Praxisgrundlagen der Informatik
 KI250,2KI,3,34,2,Statistik
 KI251,2KI,1,20,2,Statistik Praktikum (A)
 KI252,2KI,1,20,2,Statistik Praktikum (B)
+KI410,4KI,2,50,6,Algorithmen und Datenstrukturen
+KI411,4KI,2,20,6,Algorithmen und Datenstrukturen Praktikum (A)
+KI412,4KI,2,20,6,Algorithmen und Datenstrukturen Praktikum (B)
+KI413,4KI,2,20,6,Algorithmen und Datenstrukturen Praktikum (C)
+KI420,4KI,2,50,7,Software Engineering I
+KI421,4KI,2,20,7,Software Engineering I Praktikum (A)
+KI422,4KI,2,20,7,Software Engineering I Praktikum (B)
+KI423,4KI,2,20,7,Software Engineering I Praktikum (C)
+KI430,4KI,4,50,1,Natural Language Processing
+KI431,4KI,2,20,1,Natural Language Processing Praktikum (A)
+KI432,4KI,2,20,1,Natural Language Processing Praktikum (B)
+KI433,4KI,2,20,1,Natural Language Processing Praktikum (C)
+KI440,4KI,4,50,2,Machine Learning II
+KI441,4KI,2,20,2,Machine Learning II Praktikum (A)
+KI442,4KI,2,20,2,Machine Learning II Praktikum (B)
+KI443,4KI,2,20,2,Machine Learning II Praktikum (C)
+KI450,4KI,2,50,0,Künstliche Intelligenz II
+KI451,4KI,2,20,0,Künstliche Intelligenz II Praktikum (A)
+KI452,4KI,2,20,0,Künstliche Intelligenz II Praktikum (B)
+KI453,4KI,2,20,0,Künstliche Intelligenz II Praktikum (C)
+KI610,6KI,2,40,6,Big Data Algorithms
+KI611,6KI,2,20,6,Big Data Algorithms Praktikum (A)
+KI612,6KI,2,20,6,Big Data Algorithms Praktikum (B)
+KI620,6KI,2,40,1,Machine Learning III
+KI621,6KI,2,20,1,Machine Learning III Praktikum (A)
+KI622,6KI,2,20,1,Machine Learning III Praktikum (B)
