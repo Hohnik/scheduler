@@ -107,10 +107,10 @@ def main() -> None:
         print(
             f"h = {solver.ObjectiveValue()}",
         )
-        # Printer
-        # printer = Printer()
-        # printer.set_solution(solution)
-        # printer.print_lecturer_tables()
+        Printer
+        printer = Printer()
+        printer.set_solution(solution)
+        printer.print_lecturer_tables()
 
 
 

@@ -1,11 +1,12 @@
 from ortools.sat.python import cp_model
-from ortools.sat.python.cp_model import CpModel, CpSolver, IntVar, LinearExpr
+from ortools.sat.python.cp_model import CpModel, CpSolver, IntVar, LinearExpr, BoolVar
 
 from services.Data import Data
+from utils import calc_blocksizes
 
 
 class Constraint:
-    def __init__(self, bools:dict, model:CpModel, data:Data):
+    def __init__(self, bools:dict[tuple, IntVar], model:CpModel, data:Data):
         self.bools = bools
         self.model = model
         self.data = data
@@ -67,41 +68,26 @@ class Constraint:
         for d in self.all_days:
             for t in self.all_timeslots:
                 for l in self.all_lecturers:
-                    combo = []
                     for m in self.all_modules:
                         for s in self.all_semesters:
-                            if (s, d, t, m, l) in self.bools.keys():
-                                combo.append(self.bools[(s, d, t, m, l)])
-                    self.model.AddAtMostOne(combo)
+                            blocks = self.calc_blocksizes(int(self.data.modules["sws"][m]))
+                            for b in blocks:
+                                if b == 2:
+                                    if t <= 7 and (s, d, t, m, l) in self.bools.keys():
+                                        self.model.AddImplication(self.bools[(s, d, t, m, l)].Not(), self.bools[(s, d, t+1, m, l)])
 
+    def calc_blocksizes(self, sws: int, blocks=[]) -> list:
+        """
+        Calculate the best possible combination of blocks.
+        """
+        if not sws:
+            return blocks
 
+        if sws % 2 == 0:
+            return self.calc_blocksizes(sws-2, blocks + [2])
 
+        if sws >= 3:
+            return self.calc_blocksizes(sws-3, blocks + [3])
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if sws == 1:
+            return self.calc_blocksizes(sws-1, blocks + [1])
