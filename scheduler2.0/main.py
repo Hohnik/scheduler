@@ -34,6 +34,17 @@ def main() -> None:
                                 f"course_s{s}_d{d}_t{t}_m{m}_l{l}"
                             )
 
+    for m in all_modules:
+        blocks = calc_blocksizes(int(data.modules["sws"][m]))
+        for bidx, b in enumerate(blocks):
+            if b == 2:
+                for d in all_days:
+                    for t in all_timeslots:
+                        if t < 9:
+                            bools[(m, bidx, d, t)] = model.NewBoolVar(
+                                f"course_m{m}_b{b}_d{d}_ts{t}_te{t+1}"
+                            )
+
     constraint = Constraint(bools, model, data)
     constraint.one_module_per_timeslot()
     constraint.correct_sws()
@@ -74,13 +85,13 @@ def main() -> None:
     solution = {}
 
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
-        print("Solution:")
+        # print("Solution:")
         for s in all_semesters:
-            print(data.semesters[s].capitalize())
+            # print(data.semesters[s].capitalize())
             solution.update({data.semesters[s]: {}})
             for d in all_days:
                 solution[data.semesters[s]].update({data.days[d]: {}})
-                print(" ", data.days[d].capitalize())
+                # print(" ", data.days[d].capitalize())
                 for t in all_timeslots:
                     # solution[data.semesters[s]][data.days[d]].update({data.timeslots[t]: {}})
                     solution[data.semesters[s]][data.days[d]][t] = {}
@@ -88,14 +99,14 @@ def main() -> None:
                         for l in all_lecturers:
                             try:
                                 if solver.Value(bools[(s, d, t, m, l)]) == 1:
-                                    print(
-                                        " ",
-                                        " ",
-                                        t,
-                                        data.lecturers["lecturer_name"][l],
-                                        data.modules["module_id"][m],
-                                        # data.modules["module_name"][m],
-                                    )
+                                    # print(
+                                    #     " ",
+                                    #     " ",
+                                    #     t,
+                                    #     data.lecturers["lecturer_name"][l],
+                                    #     data.modules["module_id"][m],
+                                    #     # data.modules["module_name"][m],
+                                    # )
                                     solution[data.semesters[s]][data.days[d]][t] = {
                                                     "lecturer": data.lecturers["lecturer_name"][l],
                                                     "module": data.modules["module_id"][m]
@@ -103,7 +114,7 @@ def main() -> None:
 
                             except KeyError:
                                 pass
-                print()
+                # print()
         print(
             f"h = {solver.ObjectiveValue()}",
         )
@@ -125,6 +136,22 @@ def main() -> None:
     print(f" - branches: {solver.NumBranches()}")
     print(f" - wall time: {solver.WallTime()}s")
     # print(model.__dict__)
+
+def calc_blocksizes(sws: int, blocks=[]) -> list:
+    """
+    Calculate the best possible combination of blocks.
+    """
+    if not sws:
+        return blocks
+
+    if sws % 2 == 0:
+        return calc_blocksizes(sws-2, blocks + [2])
+
+    if sws >= 3:
+        return calc_blocksizes(sws-3, blocks + [3])
+
+    if sws == 1:
+        return calc_blocksizes(sws-1, blocks + [1])
 
 
 if __name__ == "__main__":

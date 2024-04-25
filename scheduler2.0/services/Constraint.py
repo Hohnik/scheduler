@@ -1,5 +1,5 @@
 from ortools.sat.python import cp_model
-from ortools.sat.python.cp_model import CpModel, CpSolver, IntVar, LinearExpr, BoolVar
+from ortools.sat.python.cp_model import CpModel, CpSolver, IntVar, LinearExpr
 
 from services.Data import Data
 from utils import calc_blocksizes
@@ -71,10 +71,24 @@ class Constraint:
                     for m in self.all_modules:
                         for s in self.all_semesters:
                             blocks = self.calc_blocksizes(int(self.data.modules["sws"][m]))
-                            for b in blocks:
-                                if b == 2:
-                                    if t <= 7 and (s, d, t, m, l) in self.bools.keys():
-                                        self.model.AddImplication(self.bools[(s, d, t, m, l)].Not(), self.bools[(s, d, t+1, m, l)])
+                            for bidx, b in enumerate(blocks):
+                                if b == 2 and t < 9 and (s, d, t, m, l) in self.bools.keys() and (s, d, t+1, m, l) in self.bools.keys():
+                                    self.model.AddImplication(self.bools[(m, bidx, d, t)], self.bools[(s, d, t, m, l)])
+                                    self.model.AddImplication(self.bools[(m, bidx, d, t)], self.bools[(s, d, t+1, m, l)])
+                                    # self.model.AddImplication(self.bools[(s, d, t+1, m, l)].Not(), self.bools[(m, bidx, d, t)].Not())
+                                    
+                                    self.model.AddBoolOr([self.bools[(s, d, t, m, l)].Not(), self.bools[(s, d, t+1, m, l)].Not(), self.bools[(m, bidx, d, t)]])
+        
+        for m in self.all_modules:
+            blocks = self.calc_blocksizes(int(self.data.modules["sws"][m]))
+            for bidx, b in enumerate(blocks):
+                if b == 2:
+                    combo = []
+                    for d in self.all_days:
+                        for t in self.all_timeslots:
+                            if t < 9:
+                                combo.append(self.bools[(m, bidx, d, t)])
+                    self.model.AddExactlyOne(combo)
 
     def calc_blocksizes(self, sws: int, blocks=[]) -> list:
         """
