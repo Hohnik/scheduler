@@ -17,7 +17,7 @@ class Constraint:
         self.all_lecturers = range(len(data.lecturers))
         self.all_modules = range(len(data.modules))
 
-    def one_module_per_timeslot(self):
+    def one_module_per_timeslot_per_semester(self):
         """
         Each slot is assigned to exactly one lecturer-module combo.
         """
@@ -30,10 +30,10 @@ class Constraint:
                             if (s, d, t, m, l) in self.bools.keys():
                                 combo.append(self.bools[(s, d, t, m, l)])
                     self.model.AddAtMostOne(combo)
-                    
-    def correct_sws(self):
+
+    def module_is_placed_sws_times(self):
         """
-        Sum( time_slots for module ) == module["sws"] | All sws have to be scheduled
+        Modulecount equals sws
         """
         for m in self.all_modules:
             combo = []
@@ -43,7 +43,7 @@ class Constraint:
                         for t in self.all_timeslots:
                             if (s, d, t, m, l) in self.bools.keys():
                                 combo.append(self.bools[(s, d, t, m, l)])
-            self.model.Add(LinearExpr.Sum(combo) == int(self.data.modules["sws"][m]))
+            self.model.Add(LinearExpr.Sum(combo) == self.data.modules["sws"][m])
 
     def one_module_per_lecturer_per_timeslot(self):
         """
@@ -59,49 +59,47 @@ class Constraint:
                                 combo.append(self.bools[(s, d, t, m, l)])
                     self.model.AddAtMostOne(combo)
 
+    def one_module_block_per_day(self):
+        """
+        A module cant have more than one block per day
+        """
+        for m in self.all_modules:
+            for d in self.all_days:
+                for l in self.all_lecturers:
+                    for blocksize in calc_blocksizes(self.data.modules["sws"][m]):
+                        combo = []
+                        for t in self.all_timeslots:
+                            for s in self.all_semesters:
+                                if (s, d, t, m, l) in self.bools.keys():
+                                    combo.append(self.bools[(s,d,t,m,l)])
+                        self.model.Add(LinearExpr.Sum(combo) <= blocksize)
+
+    def blocks_are_consecutive(self):
+        for d in self.all_days:
+            for t in self.all_timeslots:
+                for l in self.all_lecturers:
+                    for m in self.all_modules:
+                        for s in self.all_semesters:
+                            if ((s, d, t, m, l) in self.bools.keys()
+                                and (s, d, t+1, m, l) in self.bools.keys()):
+                                self.model.AddImplication(self.bools[(s, d, t, m, l)], self.bools[(s, d, t+1, m, l)])
+                            if ((s, d, t, m, l) in self.bools.keys()
+                                and (s, d, t-1, m, l) in self.bools.keys()):
+                                self.model.AddImplication(self.bools[(s, d, t, m, l)], self.bools[(s, d, t-1, m, l)])
+
     def consecutive_timeslots(self):
         """
         # TODO: implement constraint_consecutive_timeslots
-        # Wenn 2er-block: stunde vorher nicht mahte --impliziert--> nächste und übernächste stunde ist mathe
+        # Wenn 2er-block: stunde vorher nicht mathe --impliziert--> nächste und übernächste stunde ist mathe
         # Hier muss noch gecheckt werden ob wir in einen overflow laufen würden
+        # oder
+        # Die summe der nächsten zwei kurse muss der blockgröße entsprechen
+        # oder
+        # Die distanz von allen kursen in einem block muss so gering wie möglich sein
         """
         for d in self.all_days:
             for t in self.all_timeslots:
                 for l in self.all_lecturers:
                     for m in self.all_modules:
                         for s in self.all_semesters:
-                            blocks = self.calc_blocksizes(int(self.data.modules["sws"][m]))
-                            for bidx, b in enumerate(blocks):
-                                if b == 2 and t < 9 and (s, d, t, m, l) in self.bools.keys() and (s, d, t+1, m, l) in self.bools.keys():
-                                    self.model.AddImplication(self.bools[(m, bidx, d, t)], self.bools[(s, d, t, m, l)])
-                                    self.model.AddImplication(self.bools[(m, bidx, d, t)], self.bools[(s, d, t+1, m, l)])
-                                    # self.model.AddImplication(self.bools[(s, d, t+1, m, l)].Not(), self.bools[(m, bidx, d, t)].Not())
-                                    
-                                    self.model.AddBoolOr([self.bools[(s, d, t, m, l)].Not(), self.bools[(s, d, t+1, m, l)].Not(), self.bools[(m, bidx, d, t)]])
-        
-        for m in self.all_modules:
-            blocks = self.calc_blocksizes(int(self.data.modules["sws"][m]))
-            for bidx, b in enumerate(blocks):
-                if b == 2:
-                    combo = []
-                    for d in self.all_days:
-                        for t in self.all_timeslots:
-                            if t < 9:
-                                combo.append(self.bools[(m, bidx, d, t)])
-                    self.model.AddExactlyOne(combo)
-
-    def calc_blocksizes(self, sws: int, blocks=[]) -> list:
-        """
-        Calculate the best possible combination of blocks.
-        """
-        if not sws:
-            return blocks
-
-        if sws % 2 == 0:
-            return self.calc_blocksizes(sws-2, blocks + [2])
-
-        if sws >= 3:
-            return self.calc_blocksizes(sws-3, blocks + [3])
-
-        if sws == 1:
-            return self.calc_blocksizes(sws-1, blocks + [1])
+                            if (s, d, t, m, l) in self.bools.keys():

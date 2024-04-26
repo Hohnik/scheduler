@@ -9,17 +9,21 @@ class Data:
                                      dtype={"monday": str, "tuesday": str, "wednesday": str, "thursday": str,
                                             "friday": str})
         self.modules = pd.read_csv("db/modules.csv")
+        self.modules["sws"] =  self.modules["sws"].astype("int")
+        self.modules["max_participants"] =  self.modules["max_participants"].astype("int")
+        self.modules["lecturer_id"] =  self.modules["lecturer_id"].astype("int")
+
         self.semesters = self.modules["semester"].unique()
         self.days = np.array(["monday", "tuesday", "wednesday", "thursday", "friday"])
         self.timeslots = self.lecturers["monday"].iloc[0]
-        self.blocks = {"block_id": [], "module_id": [], "blocksize": []}
 
-        counter = 0
-        for module in self.modules.iloc:
-            for blocksize in calc_blocksizes(module["sws"]):
-                self.blocks["block_id"].append(counter)
-                self.blocks["module_id"].append(module["module_id"])
-                self.blocks["blocksize"].append(blocksize)
-                counter += 1
-        self.blocks = pd.DataFrame(self.blocks)
+        # self.blocks = {"block_id": [], "module_id": [], "blocksize": []}
+        # counter = 0
+        # for module in self.modules.iloc:
+        #     for blocksize in calc_blocksizes(module["sws"]):
+        #         self.blocks["block_id"].append(counter)
+        #         self.blocks["module_id"].append(module["module_id"])
+        #         self.blocks["blocksize"].append(blocksize)
+        #         counter += 1
+        # self.blocks = pd.DataFrame(self.blocks)
         # print(self.blocks)

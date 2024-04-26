@@ -1,9 +1,9 @@
-def calc_blocksizes(sws: int, blocks=[]) -> list:
+def calc_blocksizes(sws, blocks=[]) -> list:
     """
     Calculate the best possible combination of blocks.
     """
     if not sws:
-        return blocks 
+        return blocks
 
     if sws % 2 == 0:
         return calc_blocksizes(sws-2, blocks + [2])
