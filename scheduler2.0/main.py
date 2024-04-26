@@ -35,10 +35,11 @@ def main() -> None:
                             )
 
     constraint = Constraint(bools, model, data)
-    constraint.one_module_per_timeslot()
-    constraint.correct_sws()
+    constraint.one_module_per_timeslot_per_semester()
     constraint.one_module_per_lecturer_per_timeslot()
-    constraint.consecutive_timeslots()
+    constraint.module_is_placed_sws_times()
+    constraint.one_module_block_per_day()
+    # constraint.blocks_are_consecutive()
 
     # TODO: implement constraint_consecutive_timeslots
     # Wenn 2er-block: stunde vorher nicht mahte --impliziert--> nächste und übernächste stunde ist mathe
@@ -51,11 +52,11 @@ def main() -> None:
     # Apply heuristic
     preffered_placement = []
     preffered_times = [
-        [2, 2, 3, 3, 2, 2, 1, 1, 1, 1],
-        [2, 3, 4, 4, 3, 3, 2, 2, 1, 1],
-        [2, 3, 4, 4, 3, 3, 2, 2, 1, 1],
-        [2, 3, 4, 4, 3, 3, 2, 2, 1, 1],
-        [1, 2, 3, 3, 2, 2, 1, 1, 1, 1],
+        [4, 4, 4, 4, 3, 3, 2, 1, 1, 1],
+        [4, 4, 5, 5, 4, 4, 3, 2, 1, 1],
+        [4, 4, 5, 5, 4, 4, 3, 2, 1, 1],
+        [4, 4, 5, 5, 4, 4, 3, 2, 1, 1],
+        [3, 4, 4, 4, 3, 3, 2, 1, 1, 1],
     ]
     for m in all_modules:
         for l in all_lecturers:
@@ -107,12 +108,11 @@ def main() -> None:
         print(
             f"h = {solver.ObjectiveValue()}",
         )
+
         # Printer
         # printer = Printer()
         # printer.set_solution(solution)
         # printer.print_lecturer_tables()
-
-
 
     else:
         print("No optimal solution found !")
