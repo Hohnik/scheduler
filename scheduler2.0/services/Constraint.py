@@ -1,12 +1,12 @@
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import CpModel, CpSolver, IntVar, LinearExpr
-
 from services.Data import Data
+
 from utils import calc_blocksizes
 
 
 class Constraint:
-    def __init__(self, bools:dict[tuple, IntVar], model:CpModel, data:Data):
+    def __init__(self, bools: dict, model: CpModel, data: Data):
         self.bools = bools
         self.model = model
         self.data = data
@@ -71,7 +71,7 @@ class Constraint:
                         for t in self.all_timeslots:
                             for s in self.all_semesters:
                                 if (s, d, t, m, l) in self.bools.keys():
-                                    combo.append(self.bools[(s,d,t,m,l)])
+                                    combo.append(self.bools[(s, d, t, m, l)])
                         self.model.Add(LinearExpr.Sum(combo) <= blocksize)
 
     def blocks_are_consecutive(self):
@@ -80,12 +80,28 @@ class Constraint:
                 for l in self.all_lecturers:
                     for m in self.all_modules:
                         for s in self.all_semesters:
-                            if ((s, d, t, m, l) in self.bools.keys()
-                                and (s, d, t+1, m, l) in self.bools.keys()):
-                                self.model.AddImplication(self.bools[(s, d, t, m, l)], self.bools[(s, d, t+1, m, l)])
-                            if ((s, d, t, m, l) in self.bools.keys()
-                                and (s, d, t-1, m, l) in self.bools.keys()):
-                                self.model.AddImplication(self.bools[(s, d, t, m, l)], self.bools[(s, d, t-1, m, l)])
+                            if (s, d, t, m, l) in self.bools.keys() and (
+                                s,
+                                d,
+                                t + 1,
+                                m,
+                                l,
+                            ) in self.bools.keys():
+                                self.model.AddImplication(
+                                    self.bools[(s, d, t, m, l)],
+                                    self.bools[(s, d, t + 1, m, l)],
+                                )
+                            if (s, d, t, m, l) in self.bools.keys() and (
+                                s,
+                                d,
+                                t - 1,
+                                m,
+                                l,
+                            ) in self.bools.keys():
+                                self.model.AddImplication(
+                                    self.bools[(s, d, t, m, l)],
+                                    self.bools[(s, d, t - 1, m, l)],
+                                )
 
     def consecutive_timeslots(self):
         """
@@ -97,9 +113,4 @@ class Constraint:
         # oder
         # Die distanz von allen kursen in einem block muss so gering wie möglich sein
         """
-        for d in self.all_days:
-            for t in self.all_timeslots:
-                for l in self.all_lecturers:
-                    for m in self.all_modules:
-                        for s in self.all_semesters:
-                            if (s, d, t, m, l) in self.bools.keys():
+        pass
