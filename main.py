@@ -1,5 +1,6 @@
 import pprint
 from sys import modules
+
 from ortools.sat.python import cp_model
 
 from services.Constraint import Constraint
@@ -143,10 +144,10 @@ def main() -> None:
     print(f" - conflicts: {solver.NumConflicts()}")
     print(f" - branches: {solver.NumBranches()}")
     print(f" - wall time: {solver.WallTime()}s")
-    print(model.__dict__)
+#   print(model.__dict__)
 
 
-def calc_blocksizes(sws: int, blocks=[]) -> list:
+def calc_blocksizes(sws: int, blocks=[]):
     """
     Calculate the best possible combination of blocks.
     """
